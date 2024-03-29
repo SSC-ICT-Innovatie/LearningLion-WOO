@@ -2,7 +2,7 @@ import os
 import sys
 import datetime as dt
 from loguru import logger
-from langchain_community.vectorstores.chroma import Chroma
+# from langchain_community.vectorstores.chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
@@ -36,6 +36,7 @@ def getattr_or_default(obj, attr, default=None):
 
 
 def get_chroma_vector_store(collection_name, embeddings, vectordb_folder):
+    from custom_langchain.chroma import Chroma
     vector_store = Chroma(
         collection_name=collection_name,
         embedding_function=embeddings,

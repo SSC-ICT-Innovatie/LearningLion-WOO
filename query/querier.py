@@ -10,6 +10,7 @@ import settings
 import utils as ut
 from llm_class.llm_class import LLM
 from langchain.prompts import PromptTemplate
+from typing import Optional
 
 
 class Querier:
@@ -92,7 +93,7 @@ class Querier:
             # TODO: For me, the condense_question_prompt does not work and it does not change anything.
             base_prompt = "Answer the question in dutch. Answer the question between the triple dashes: ---{question}---"
             if settings.RETRIEVAL_METHOD == "answer_and_question":
-                from langchain_custom_chain.base import CustomConversationalRetrievalChain
+                from custom_langchain.base import CustomConversationalRetrievalChain
                 logger.info("Using custom chain")
                 self.chain = CustomConversationalRetrievalChain.from_llm(
                     llm=self.llm,
@@ -113,19 +114,19 @@ class Querier:
                 )
         logger.info("Executed Querier.make_chain")
         
-    def get_documents_with_scores(self, question: str) -> List[Tuple[Document, float]]:
-        most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(question, k=self.chunk_k)
+    def get_documents_with_scores(self, question: str, filter: Optional[Dict[str, str]] = None) -> List[Tuple[Document, float]]:
+        most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(question, k=self.chunk_k, filter=filter)
         logger.info(f"Topscore most similar docs: {most_similar_docs[0][1]}")
         
         if settings.RETRIEVAL_METHOD == "regular":
             return most_similar_docs
-        # Else retrieval method is "answer_and_question
+        # Else retrieval method is "answer_and_question"
         hallucinated_prompt = f"""Please write a passage to answer the question. The passage should be short, concise, and answer in dutch and in maximum 50 words.
         Question: {question}
         Passage:"""
         hallucinated_answer = self.llm.invoke(hallucinated_prompt)
         logger.info(f"Hallucinated answer: {hallucinated_answer}")
-        most_similar_docs_hallucinated = self.vector_store.similarity_search_with_relevance_scores(hallucinated_answer.content, k=self.chunk_k)
+        most_similar_docs_hallucinated = self.vector_store.similarity_search_with_relevance_scores(hallucinated_answer.content, k=self.chunk_k, filter=filter)
         logger.info(f"Topscore most similar docs hallucinated: {most_similar_docs_hallucinated[0][1]}")
 
         # Add the retrieval method of the docs to the metadata
