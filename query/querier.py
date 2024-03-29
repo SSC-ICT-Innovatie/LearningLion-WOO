@@ -10,6 +10,7 @@ import settings
 import utils as ut
 from llm_class.llm_class import LLM
 from langchain.prompts import PromptTemplate
+from typing import Optional
 
 
 class Querier:
@@ -48,6 +49,7 @@ class Querier:
         self.llm = LLM(self.llm_type, self.llm_model_type, self.local_api_url, self.azureopenai_api_version).get_llm()
         self.chain = None
         self.chain_hallucinated = None
+        self.filters = {}
 
     def make_agent(self, input_folder, vectordb_folder):
         """
@@ -69,7 +71,7 @@ class Querier:
         #
         return
 
-    def make_chain(self, input_folder, vectordb_folder, search_filter=None) -> None:
+    def make_chain(self, input_folder, vectordb_folder) -> None:
         self.input_folder = input_folder
         self.vectordb_folder = vectordb_folder
 
@@ -79,53 +81,51 @@ class Querier:
             # get retriever with some search arguments
             # maximum number of chunks to retrieve
             search_kwargs = {"k": self.chunk_k}
-            # filter, if set
-            if search_filter is not None:
-                logger.info(f"querying vector store with filter {search_filter}")
-                search_kwargs["filter"] = search_filter
             if self.search_type == "similarity_score_threshold":
                 search_kwargs["score_threshold"] = self.score_threshold
             retriever = self.vector_store.as_retriever(search_type=self.search_type, search_kwargs=search_kwargs)
             logger.info(f"Loaded chromadb from folder {self.vectordb_folder}")
 
-        if self.chain_name == "conversationalretrievalchain":
-            # TODO: For me, the condense_question_prompt does not work and it does not change anything.
-            base_prompt = "Answer the question in dutch. Answer the question between the triple dashes: ---{question}---"
-            if settings.RETRIEVAL_METHOD == "answer_and_question":
-                from langchain_custom_chain.base import CustomConversationalRetrievalChain
-                logger.info("Using custom chain")
-                self.chain = CustomConversationalRetrievalChain.from_llm(
-                    llm=self.llm,
-                    retriever=retriever,
-                    chain_type=self.chain_type,
-                    verbose=self.chain_verbosity,
-                    return_source_documents=True,
-                    condense_question_prompt=PromptTemplate.from_template(base_prompt)
-                )
-            else:
-                self.chain = ConversationalRetrievalChain.from_llm(
-                    llm=self.llm,
-                    retriever=retriever,
-                    chain_type=self.chain_type,
-                    verbose=self.chain_verbosity,
-                    return_source_documents=True,
-                    condense_question_prompt=PromptTemplate.from_template(base_prompt)
-                )
+        # if self.chain_name == "conversationalretrievalchain":
+        #     # TODO: For me, the condense_question_prompt does not work and it does not change anything.
+        #     base_prompt = "Answer the question in dutch. Answer the question between the triple dashes: ---{question}---"
+        #     if settings.RETRIEVAL_METHOD == "answer_and_question":
+        #         from custom_langchain.base import CustomConversationalRetrievalChain
+        #         logger.info("Using custom chain")
+        #         self.chain = CustomConversationalRetrievalChain.from_llm(
+        #             llm=self.llm,
+        #             retriever=retriever,
+        #             chain_type=self.chain_type,
+        #             verbose=self.chain_verbosity,
+        #             return_source_documents=True,
+        #             condense_question_prompt=PromptTemplate.from_template(base_prompt)
+        #         )
+        #     else:
+        #         self.chain = ConversationalRetrievalChain.from_llm(
+        #             llm=self.llm,
+        #             retriever=retriever,
+        #             chain_type=self.chain_type,
+        #             verbose=self.chain_verbosity,
+        #             return_source_documents=True,
+        #             condense_question_prompt=PromptTemplate.from_template(base_prompt)
+        #         )
         logger.info("Executed Querier.make_chain")
         
     def get_documents_with_scores(self, question: str) -> List[Tuple[Document, float]]:
-        most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(question, k=self.chunk_k)
+        logger.error("current filters: " + str(self.filters))
+        most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(question, k=self.chunk_k, filter=self.filters)
+        logger.info(f"Most similar docs: {most_similar_docs}")
         logger.info(f"Topscore most similar docs: {most_similar_docs[0][1]}")
         
         if settings.RETRIEVAL_METHOD == "regular":
             return most_similar_docs
-        # Else retrieval method is "answer_and_question
+        # Else retrieval method is "answer_and_question"
         hallucinated_prompt = f"""Please write a passage to answer the question. The passage should be short, concise, and answer in dutch and in maximum 50 words.
         Question: {question}
         Passage:"""
         hallucinated_answer = self.llm.invoke(hallucinated_prompt)
         logger.info(f"Hallucinated answer: {hallucinated_answer}")
-        most_similar_docs_hallucinated = self.vector_store.similarity_search_with_relevance_scores(hallucinated_answer.content, k=self.chunk_k)
+        most_similar_docs_hallucinated = self.vector_store.similarity_search_with_relevance_scores(hallucinated_answer.content, k=self.chunk_k, filter=self.filters)
         logger.info(f"Topscore most similar docs hallucinated: {most_similar_docs_hallucinated[0][1]}")
 
         # Add the retrieval method of the docs to the metadata
@@ -182,3 +182,9 @@ class Querier:
         Used by "Clear Conversation" button in streamlit_app.py  
         """
         self.chat_history = []
+
+    def get_woo_publisher(self) -> List[str]:
+        entries = self.vector_store.get()
+        metadata = entries.get("metadatas", {})
+        return sorted({data['dossiers_dc_publisher_name'] for data in metadata})
+    

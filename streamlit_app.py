@@ -8,6 +8,7 @@ from query.querier import Querier
 from summarize.summarizer import Summarizer
 import settings
 import utils as ut
+from datetime import date
 
 
 def click_go_button():
@@ -85,7 +86,6 @@ def folder_selector(folders):
     st.session_state['folder_selected'] = my_folder_name_selected
     return my_folder_name_selected, my_folder_path_selected, my_vectordb_folder_path_selected
 
-
 def check_vectordb(my_querier, my_folder_name_selected, my_folder_path_selected, my_vectordb_folder_path_selected):
     # If a folder is chosen that is not equal to the last known source folder
     if folder_name_selected != st.session_state['folder_selected']:
@@ -110,12 +110,49 @@ def check_vectordb(my_querier, my_folder_name_selected, my_folder_path_selected,
                             my_vectordb_folder_path_selected)
         ingester.ingest()
 
-    # create a new chain based on the new source folder
-    my_querier.make_chain(my_folder_name_selected, my_vectordb_folder_path_selected)
-    # set session state of selected folder to new source folder
-    st.session_state['folder_selected'] = my_folder_name_selected
-    logger.info("Executed check_vectordb")
+    if not my_querier.chain:
+        # create a new chain based on the new source folder
+        my_querier.make_chain(my_folder_name_selected, my_vectordb_folder_path_selected)
+        # set session state of selected folder to new source folder
+        st.session_state['folder_selected'] = my_folder_name_selected
+        logger.info("Executed check_vectordb")
+        
+    
+def update_filters(my_querier, my_folder_name_selected, my_vectordb_folder_path_selected, selected_publisher, start_date, end_date):
+    filters = []
 
+    if selected_publisher:
+        filters.append({"dossiers_dc_publisher_name": selected_publisher})
+
+    # Initialize date filters as a separate list to hold all date-related conditions
+    date_filters = []
+    if start_date:
+        date_filters.append({"$or": [
+            {"dossiers_year": {"$gt": start_date.year}},
+            {"$and": [{"dossiers_year": start_date.year}, {"dossiers_month": {"$gt": start_date.month}}]},
+            {"$and": [{"dossiers_year": start_date.year}, {"dossiers_month": start_date.month}, {"dossiers_day": {"$gt": start_date.day}}]}
+        ]})
+
+    if end_date:
+        date_filters.append({"$or": [
+            {"dossiers_year": {"$lt": end_date.year}},
+            {"$and": [{"dossiers_year": end_date.year}, {"dossiers_month": {"$lt": end_date.month}}]},
+            {"$and": [{"dossiers_year": end_date.year}, {"dossiers_month": end_date.month}, {"dossiers_day": {"$lte": end_date.day}}]}
+        ]})
+
+    # Add the combined date filters to the main filters list, if any date conditions exist
+    if date_filters:
+        # If there are both start_date and end_date filters, they need to be combined logically
+        if len(date_filters) > 1:
+            filters.append({"$and": date_filters})
+        else:
+            filters.extend(date_filters)
+
+    # If there are multiple filters, wrap them in $and, otherwise, just use the single filter directly
+    final_filters = {"$and": filters} if len(filters) > 1 else filters[0] if filters else {}
+
+    my_querier.filters = final_filters
+    logger.info("Filters updated: ", my_querier.filters)
 
 def handle_query(my_querier, my_prompt: str):
     # Display user message in chat message container
@@ -188,15 +225,15 @@ def initialize_page():
         ''',
         unsafe_allow_html=True
     )
-    with st.sidebar.expander("User manual"):
-        # read app explanation from file explanation.txt
-        with open(file=settings.APP_INFO, mode="r", encoding="utf8") as f:
-            explanation = f.read()
-        st.markdown(body=explanation, unsafe_allow_html=True)
-        st.image("./images/multilingual.png")
-    st.sidebar.divider()
+    # with st.sidebar.expander("User manual"):
+    #     # read app explanation from file explanation.txt
+    #     with open(file=settings.APP_INFO, mode="r", encoding="utf8") as f:
+    #         explanation = f.read()
+    #     st.markdown(body=explanation, unsafe_allow_html=True)
+    #     st.image("./images/multilingual.png")
+    # st.sidebar.divider()
     # Sidebar text for folder selection
-    st.sidebar.title("Select a document folder")
+    st.sidebar.title("Select your woo folder")
     logger.info("Executed initialize_page()")
 
 
@@ -246,17 +283,34 @@ st.sidebar.button("GO", type="primary", on_click=click_go_button)
 
 # only start a conversation when a folder is selected and selection is confirmed with "GO" button
 if st.session_state['is_GO_clicked']:
+    st.sidebar.divider()
     # create or update vector database if necessary
     check_vectordb(querier, folder_name_selected, folder_path_selected, vectordb_folder_path_selected)
-    summary_type = st.sidebar.radio(
-        "Start with summary?",
-        ["No", "Short", "Long"],
-        captions=["No, start the conversation", "Quick but lower quality", "Slow but higher quality"],
-        index=0)
-    # if a short or long summary is chosen
-    if summary_type in ["Short", "Long"]:
-        # show the summary at the top of the screen
-        create_and_show_summary(summary_type, folder_path_selected, folder_name_selected, vectordb_folder_path_selected)
+        
+    if settings.DATA_TYPE == "woo":
+        with st.sidebar.expander("Search filters"):
+            if settings.DATA_TYPE == "woo":
+                publishers = ["None"] + querier.get_woo_publisher()
+                selected_publisher = st.selectbox("Filter on Publisher", publishers)
+            
+            # Date input for date range search
+            start_date = st.date_input("After Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='start_date')
+            end_date = st.date_input("Before Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='end_date')
+            
+            # Assuming you have a button to apply filters
+            apply_filters = st.button("Apply Filters", key="apply_filters")
+            if apply_filters:
+                update_filters(querier, folder_name_selected, vectordb_folder_path_selected, selected_publisher, start_date, end_date)
+            
+    # summary_type = st.sidebar.radio(
+    #     "Start with summary?",
+    #     ["No", "Short", "Long"],
+    #     captions=["No, start the conversation", "Quick but lower quality", "Slow but higher quality"],
+    #     index=0)
+    # # if a short or long summary is chosen
+    # if summary_type in ["Short", "Long"]:
+    #     # show the summary at the top of the screen
+    #     create_and_show_summary(summary_type, folder_path_selected, folder_name_selected, vectordb_folder_path_selected)
 
     # show button "Clear Conversation"
     clear_messages_button = st.button("Clear Conversation", key="clear")
@@ -272,6 +326,7 @@ if st.session_state['is_GO_clicked']:
     # display chat messages from history
     display_chat_history()
 
+    st.chat_input("Your quasdfestion", key="chat_input")
     # react to user input if a question has been asked
-    if prompt := st.chat_input("Your question"):
+    if prompt := st.chat_input("Your question", key="chat_input2"):
         handle_query(querier, prompt)

@@ -174,7 +174,19 @@ class Ingester:
             
             # Only keep the relevant data
             filtered_woo_data = parsed_woo_data[['foi_documentId', 'foi_dossierId', 'documents_dc_title', 'documents_dc_description', 'documents_foi_fileName', 'documents_dc_format', 'documents_dc_source', 'documents_dc_type', 'documents_foi_nrPages', 'documents_foi_pdfDateCreated', 'documents_foi_pdfDateModified', 'documents_foi_pdfCreator', 'documents_foi_pdfProducer', 'documents_foi_pdfAuthor', 'documents_foi_pdfCompany', 'documents_foi_pdfTitle', 'documents_foi_pdfSubject', 'documents_foi_pdfKeywords', 'dossiers_dc_title', 'dossiers_dc_description', 'dossiers_dc_type', 'dossiers_dc_type_description', 'dossiers_dc_publisher', 'dossiers_dc_publisher_name', 'dossiers_dc_source', 'dossiers_foi_publishedDate', 'dossiers_dc_date_year', 'dossiers_foi_requestDate', 'dossiers_foi_decisionDate', 'dossiers_foi_valuation', 'dossiers_foi_requestText', 'dossiers_foi_decisionText', 'dossiers_foi_isAdjourned', 'dossiers_foi_requester', 'dossiers_foi_retrievedDate', 'dossiers_tooiwl_rubriek', 'dossiers_tooiwl_rubriekCode', 'dossiers_foi_geoInfo', 'all_foi_bodyText_grouped']]
-            woo_data = filtered_woo_data.rename(columns={'all_foi_bodyText_grouped': 'all_foi_bodyText'})
+           
+            # Creating a copy of the filtered DataFrame to avoid SettingWithCopyWarning
+            filtered_woo_data_copy = filtered_woo_data.copy()
+
+            # Convert the 'dossiers_dc_date_year' column to datetime format
+            dossier_date = pd.to_datetime(filtered_woo_data_copy['dossiers_dc_date_year'])
+
+            # Split the date into separate columns for year, month, and day
+            filtered_woo_data_copy['dossiers_year'] = dossier_date.dt.year
+            filtered_woo_data_copy['dossiers_month'] = dossier_date.dt.month
+            filtered_woo_data_copy['dossiers_day'] = dossier_date.dt.day
+            
+            woo_data = filtered_woo_data_copy.rename(columns={'all_foi_bodyText_grouped': 'all_foi_bodyText'})
             
             # If the vector store already exists, get the set of ingested files from the vector store
             if os.path.exists(self.vectordb_folder):
