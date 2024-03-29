@@ -233,7 +233,7 @@ def initialize_page():
     #     st.image("./images/multilingual.png")
     # st.sidebar.divider()
     # Sidebar text for folder selection
-    st.sidebar.title("Select a document folder")
+    st.sidebar.title("Select your woo folder")
     logger.info("Executed initialize_page()")
 
 
