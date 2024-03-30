@@ -259,8 +259,9 @@ def initialize_querier():
 
 
 def set_page_config():
-    st.set_page_config(page_title="Chat with your documents",
-                       page_icon=':books:',
+    favicon = Image.open("images/favicon.ico")
+    st.set_page_config(page_title="SSC-ICT WOO-RAG",
+                       page_icon=favicon,
                        layout='wide',
                        initial_sidebar_state='auto')
     logger.info("\nExecuted set_page_config()")
