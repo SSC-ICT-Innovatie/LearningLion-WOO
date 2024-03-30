@@ -426,7 +426,6 @@ class Chroma(VectorStore):
             the query text and cosine distance in float for each.
             Lower score represents more similarity.
         """
-        print("AHAHAHAH")
         if self._embedding_function is None:
             results = self.__query_collection(
                 query_texts=[query],

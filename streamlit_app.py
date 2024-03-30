@@ -53,11 +53,30 @@ def display_chat_history():
     Shows the complete chat history
     """
     for message in st.session_state['messages']:
+        if message["role"] == "results":
+            show_results(message["content"], expand=False)
+            continue
         if message["role"] != "system":
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
+            continue
     logger.info("Executed display_chat_history()")
-
+    
+def show_results(documents, expand=True):
+    with st.expander("Results", expanded=expand):
+        for index, tuple in enumerate(documents):
+            document, score = tuple
+            retrieval_method_info = f' , retrieval method: {document.metadata.get("retrieval_method")}' if document.metadata.get("retrieval_method") else ""
+            if index != 0:
+                st.markdown("---")
+            document_link = f', document: [link]({document.metadata["documents_dc_source"]})' if document.metadata.get("documents_dc_source") else ""
+            dossier_link = f', source: [link](https://pid.wooverheid.nl/?pid={document.metadata["foi_dossierId"]})' if document.metadata.get("foi_dossierId") else ""
+            st.markdown(f'''**Document id: {document.metadata['foi_documentId']},
+                        page: {document.metadata['page_number']},
+                        chunk: {document.metadata['chunk']},
+                        dossier: {document.metadata['dossiers_dc_title']},
+                        score: {score:.4f}{retrieval_method_info}{document_link}{dossier_link}**''')
+            st.markdown(f"{document.page_content}")
 
 def folderlist_creator():
     """
@@ -120,7 +139,6 @@ def check_vectordb(my_querier, my_folder_name_selected, my_folder_path_selected,
     
 def update_filters(my_querier, selected_publisher, start_date, end_date):
     filters = []
-
     if selected_publisher and selected_publisher != "--None--":
         filters.append({"dossiers_dc_publisher_name": selected_publisher})
 
@@ -165,37 +183,12 @@ def handle_query(my_querier, my_prompt: str):
     with st.spinner("Thinking..."):
         # Generate a response
         response = my_querier.ask_question(my_prompt)
-    # Display the response in chat message container
-    if 'answer' in response:
-        with st.chat_message("assistant"):
-            st.markdown(response["answer"])
-        # Add the response to chat history
-        st.session_state['messages'].append({"role": "assistant", "content": response["answer"]})
     if len(response["source_documents"]) > 0:
-        with st.expander("Paragraphs used for answer"):
-            for index, tuple in enumerate(response["source_documents"]):
-                document, score = tuple
-                retrieval_method_info = f' , retrieval method: {document.metadata.get("retrieval_method")}' if document.metadata.get("retrieval_method") else ""
-                if index != 0:
-                    st.markdown("---")
-                if settings.DATA_TYPE == "woo":
-                    document_link = f', document: [link]({document.metadata["documents_dc_source"]})' if document.metadata.get("documents_dc_source") else ""
-                    dossier_link = f', source: [link](https://pid.wooverheid.nl/?pid={document.metadata["foi_dossierId"]})' if document.metadata.get("foi_dossierId") else ""
-                    st.markdown(f'''**Document id: {document.metadata['foi_documentId']},
-                                page: {document.metadata['page_number']},
-                                chunk: {document.metadata['chunk']},
-                                dossier: {document.metadata['dossiers_dc_title']},
-                                score: {score:.4f}{retrieval_method_info}{document_link}{dossier_link}**''')
-                else:
-                    st.markdown(f'''**page: {document.metadata['page_number']},
-                                chunk: {document.metadata['chunk']},
-                                file: {document.metadata['filename']}
-                                score: {score:.4f}{retrieval_method_info}**''')
-                st.markdown(f"{document.page_content}")
+        st.session_state['messages'].append({"role": "results", "content": response["source_documents"]})
+        show_results(response["source_documents"])
     else:
-        logger.info("No source documents found relating to the question")
+        logger.warning("No source documents found relating to the question")
     logger.info("Executed handle_query(querier, prompt)")
-
 
 @st.cache_data
 def initialize_page():
@@ -257,7 +250,6 @@ def initialize_querier():
     logger.info("Executed initialize_querier()")
     return my_querier
 
-
 def set_page_config():
     favicon = Image.open("images/favicon.ico")
     st.set_page_config(page_title="SSC-ICT WOO-RAG",
@@ -265,7 +257,6 @@ def set_page_config():
                        layout='wide',
                        initial_sidebar_state='auto')
     logger.info("\nExecuted set_page_config()")
-
 
 # ### MAIN PROGRAM ####
 # set page configuration, this is the first thing that needs to be done
@@ -339,10 +330,10 @@ if st.session_state['is_GO_clicked']:
         querier.clear_history()
         logger.info("Clear History button clicked")
 
+    logger.error("waarom gebeurt dit niet")
     # display chat messages from history
     display_chat_history()
 
-    st.chat_input("Your quasdfestion", key="chat_input")
     # react to user input if a question has been asked
-    if prompt := st.chat_input("Your question", key="chat_input2"):
+    if prompt := st.chat_input("Your question", key="chat_input"):
         handle_query(querier, prompt)
