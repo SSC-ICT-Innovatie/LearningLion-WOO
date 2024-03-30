@@ -283,6 +283,8 @@ folder_name_selected, folder_path_selected, vectordb_folder_path_selected = fold
 # Initialize session state variable if not present
 if 'filters_saved' not in st.session_state:
     st.session_state['filters_saved'] = True
+if 'checked_vectordb' not in st.session_state:
+    st.session_state['checked_vectordb'] = False
 
 # create button to confirm folder selection. This button sets session_state['is_GO_clicked'] to True
 st.sidebar.button("GO", type="primary", on_click=click_go_button)
@@ -290,8 +292,10 @@ st.sidebar.button("GO", type="primary", on_click=click_go_button)
 # only start a conversation when a folder is selected and selection is confirmed with "GO" button
 if st.session_state['is_GO_clicked']:
     st.sidebar.divider()
-    # create or update vector database if necessary
-    check_vectordb(querier, folder_name_selected, folder_path_selected, vectordb_folder_path_selected)
+    # Create or update vector database if necessary, only once per session
+    if not st.session_state['checked_vectordb']:
+        check_vectordb(querier, folder_name_selected, folder_path_selected, vectordb_folder_path_selected)
+        st.session_state['checked_vectordb'] = True
         
     if settings.DATA_TYPE == "woo":
         with st.sidebar.expander("Search filters"):
