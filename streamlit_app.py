@@ -52,9 +52,11 @@ def display_chat_history():
     """
     Shows the complete chat history
     """
-    for message in st.session_state['messages']:
+    length = len(st.session_state['messages'])
+    for index, message in enumerate(st.session_state['messages']):
         if message["role"] == "results":
-            show_results(message["content"], expand=False)
+            # Only expand it on the most recent entry
+            show_results(message["content"], expand=index==length-1)
             continue
         if message["role"] != "system":
             with st.chat_message(message["role"]):
@@ -185,10 +187,10 @@ def handle_query(my_querier, my_prompt: str):
         response = my_querier.ask_question(my_prompt)
     if len(response["source_documents"]) > 0:
         st.session_state['messages'].append({"role": "results", "content": response["source_documents"]})
-        show_results(response["source_documents"])
     else:
         logger.warning("No source documents found relating to the question")
     logger.info("Executed handle_query(querier, prompt)")
+    st.rerun()
 
 @st.cache_data
 def initialize_page():
@@ -228,7 +230,7 @@ def initialize_page():
     #     st.image("./images/multilingual.png")
     # st.sidebar.divider()
     # Sidebar text for folder selection
-    st.sidebar.title("Select your woo folder")
+    st.sidebar.title("Select your WOO folder")
     logger.info("Executed initialize_page()")
 
 
@@ -239,7 +241,10 @@ def initialize_session_state():
         st.session_state['folder_selected'] = ""
     if 'messages' not in st.session_state:
         st.session_state['messages'] = []
-
+    if 'filters_saved' not in st.session_state:
+        st.session_state['filters_saved'] = True
+    if 'checked_vectordb' not in st.session_state:
+        st.session_state['checked_vectordb'] = False
 
 @st.cache_resource
 def initialize_querier():
@@ -256,7 +261,7 @@ def set_page_config():
                        page_icon=favicon,
                        layout='wide',
                        initial_sidebar_state='auto')
-    logger.info("\nExecuted set_page_config()")
+    logger.info("Executed set_page_config()")
 
 # ### MAIN PROGRAM ####
 # set page configuration, this is the first thing that needs to be done
@@ -271,11 +276,6 @@ initialize_session_state()
 querier = initialize_querier()
 # chosen folder and associated vector database
 folder_name_selected, folder_path_selected, vectordb_folder_path_selected = folder_selector(source_folders_available)
-# Initialize session state variable if not present
-if 'filters_saved' not in st.session_state:
-    st.session_state['filters_saved'] = True
-if 'checked_vectordb' not in st.session_state:
-    st.session_state['checked_vectordb'] = False
 
 # create button to confirm folder selection. This button sets session_state['is_GO_clicked'] to True
 st.sidebar.button("GO", type="primary", on_click=click_go_button)
@@ -316,22 +316,33 @@ if st.session_state['is_GO_clicked']:
     # if summary_type in ["Short", "Long"]:
     #     # show the summary at the top of the screen
     #     create_and_show_summary(summary_type, folder_path_selected, folder_name_selected, vectordb_folder_path_selected)
-
-    # show button "Clear History"
-    clear_messages_button = st.button("Clear History", key="clear")
-
-    # if button "Clear History" is clicked
-    if clear_messages_button:
-        # clear all chat messages on screen and in Querier object
-        # NB: session state of "is_GO_clicked" and "folder_selected" remain unchanged
-        st.session_state['messages'] = []
-        querier.clear_history()
-        logger.info("Clear History button clicked")
-
-    logger.error("waarom gebeurt dit niet")
-    # display chat messages from history
+            
+    # Display chat messages from history
     display_chat_history()
-
-    # react to user input if a question has been asked
+    
+    # React to user input if a question has been asked
     if prompt := st.chat_input("Your question", key="chat_input"):
         handle_query(querier, prompt)
+
+    # If button "Clear History" is clicked
+    if len(st.session_state['messages']) > 0:
+        # Show button "Clear History"
+        clear_messages_button = st.button("Clear History", key="clear")
+        if clear_messages_button:
+            # clear all chat messages on screen and in Querier object
+            # NB: session state of "is_GO_clicked" and "folder_selected" remain unchanged
+            st.session_state['messages'] = []
+            querier.clear_history()
+            logger.info("Clear History button clicked")
+    # If no messages yet, give suggestions
+    else:
+        st.markdown("##")
+        st.subheader("Voorbeeld prompt:")
+        # with st.container():
+        example_question_1 = "Wat is de hoogste politiesalaris in Nederland?"
+        example_question_2 = "Wat wordt er gedaan om meer energiezuinig om te gaan in Nederland?"
+        if st.button(example_question_1, key="example_question_1"):
+            handle_query(querier, example_question_1)
+        if st.button(example_question_2, key="example_question_2"):
+            handle_query(querier, example_question_2)
+            
