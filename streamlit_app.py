@@ -323,16 +323,16 @@ if st.session_state['is_GO_clicked']:
     #     # show the summary at the top of the screen
     #     create_and_show_summary(summary_type, folder_path_selected, folder_name_selected, vectordb_folder_path_selected)
 
-    # show button "Clear Conversation"
-    clear_messages_button = st.button("Clear Conversation", key="clear")
+    # show button "Clear History"
+    clear_messages_button = st.button("Clear History", key="clear")
 
-    # if button "Clear Conversation" is clicked
+    # if button "Clear History" is clicked
     if clear_messages_button:
         # clear all chat messages on screen and in Querier object
         # NB: session state of "is_GO_clicked" and "folder_selected" remain unchanged
         st.session_state['messages'] = []
         querier.clear_history()
-        logger.info("Clear Conversation button clicked")
+        logger.info("Clear History button clicked")
 
     # display chat messages from history
     display_chat_history()
