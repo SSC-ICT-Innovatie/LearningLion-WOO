@@ -282,32 +282,30 @@ st.sidebar.button("GO", type="primary", on_click=click_go_button)
 
 # only start a conversation when a folder is selected and selection is confirmed with "GO" button
 if st.session_state['is_GO_clicked']:
-    st.sidebar.divider()
     # Create or update vector database if necessary, only once per session
     if not st.session_state['checked_vectordb']:
         check_vectordb(querier, folder_name_selected, folder_path_selected, vectordb_folder_path_selected)
         st.session_state['checked_vectordb'] = True
         
-    if settings.DATA_TYPE == "woo":
-        with st.sidebar.expander("Search filters"):
-            def on_change():
-                st.session_state['filters_saved'] = False
+    st.sidebar.divider()
+    with st.sidebar.expander("Search filters"):
+        def on_change():
+            st.session_state['filters_saved'] = False
 
-            if settings.DATA_TYPE == "woo":
-                publishers = ["--None--"] + querier.get_woo_publisher()
-                selected_publisher = st.selectbox("Filter on Publisher", publishers, on_change=on_change)
+        publishers = ["--None--"] + querier.get_woo_publisher()
+        selected_publisher = st.selectbox("Filter on Publisher", publishers, on_change=on_change)
+    
+        # Date input for date range search
+        start_date = st.date_input("After Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='start_date', on_change=on_change)
+        end_date = st.date_input("Before Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='end_date', on_change=on_change)
+        
+        # Assuming you have a button to apply filters
+        apply_filters = st.button("Apply Filters", key="apply_filters")
+        if apply_filters:
+            update_filters(querier, selected_publisher, start_date, end_date)
             
-            # Date input for date range search
-            start_date = st.date_input("After Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='start_date', on_change=on_change)
-            end_date = st.date_input("Before Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='end_date', on_change=on_change)
-            
-            # Assuming you have a button to apply filters
-            apply_filters = st.button("Apply Filters", key="apply_filters")
-            if apply_filters:
-                update_filters(querier, selected_publisher, start_date, end_date)
-                
-            if not st.session_state['filters_saved']:
-                st.error("You have unsaved filters!")
+        if not st.session_state['filters_saved']:
+            st.error("You have unsaved filters!")
             
     # summary_type = st.sidebar.radio(
     #     "Start with summary?",
