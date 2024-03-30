@@ -329,7 +329,7 @@ if st.session_state['is_GO_clicked']:
         # Show button "Clear History"
         clear_messages_button = st.button("Clear History", key="clear")
         if clear_messages_button:
-            # clear all chat messages on screen and in Querier object
+            # Clear all chat messages on screen and in Querier object
             # NB: session state of "is_GO_clicked" and "folder_selected" remain unchanged
             st.session_state['messages'] = []
             querier.clear_history()
@@ -338,11 +338,13 @@ if st.session_state['is_GO_clicked']:
     else:
         st.markdown("##")
         st.subheader("Voorbeeld prompt:")
-        # with st.container():
         example_question_1 = "Wat is de hoogste politiesalaris in Nederland?"
         example_question_2 = "Wat wordt er gedaan om meer energiezuinig om te gaan in Nederland?"
+        example_question_3 = "Welke beleidsdocumenten zijn er met betrekking tot het milieuwetgevingsbeleid in Den Haag?"
         if st.button(example_question_1, key="example_question_1"):
             handle_query(querier, example_question_1)
         if st.button(example_question_2, key="example_question_2"):
             handle_query(querier, example_question_2)
+        if st.button(example_question_3, key="example_question_3"):
+            handle_query(querier, example_question_3)
             
