@@ -118,10 +118,10 @@ def check_vectordb(my_querier, my_folder_name_selected, my_folder_path_selected,
         logger.info("Executed check_vectordb")
         
     
-def update_filters(my_querier, my_folder_name_selected, my_vectordb_folder_path_selected, selected_publisher, start_date, end_date):
+def update_filters(my_querier, selected_publisher, start_date, end_date):
     filters = []
 
-    if selected_publisher:
+    if selected_publisher and selected_publisher != "--None--":
         filters.append({"dossiers_dc_publisher_name": selected_publisher})
 
     # Initialize date filters as a separate list to hold all date-related conditions
@@ -152,6 +152,8 @@ def update_filters(my_querier, my_folder_name_selected, my_vectordb_folder_path_
     final_filters = {"$and": filters} if len(filters) > 1 else filters[0] if filters else {}
 
     my_querier.filters = final_filters
+    st.session_state['filters_saved'] = True
+    st.success("Filters are successfully saved!")
     logger.info("Filters updated: ", my_querier.filters)
 
 def handle_query(my_querier, my_prompt: str):
@@ -277,6 +279,9 @@ initialize_session_state()
 querier = initialize_querier()
 # chosen folder and associated vector database
 folder_name_selected, folder_path_selected, vectordb_folder_path_selected = folder_selector(source_folders_available)
+# Initialize session state variable if not present
+if 'filters_saved' not in st.session_state:
+    st.session_state['filters_saved'] = True
 
 # create button to confirm folder selection. This button sets session_state['is_GO_clicked'] to True
 st.sidebar.button("GO", type="primary", on_click=click_go_button)
@@ -289,18 +294,24 @@ if st.session_state['is_GO_clicked']:
         
     if settings.DATA_TYPE == "woo":
         with st.sidebar.expander("Search filters"):
+            def on_change():
+                st.session_state['filters_saved'] = False
+
             if settings.DATA_TYPE == "woo":
-                publishers = ["None"] + querier.get_woo_publisher()
-                selected_publisher = st.selectbox("Filter on Publisher", publishers)
+                publishers = ["--None--"] + querier.get_woo_publisher()
+                selected_publisher = st.selectbox("Filter on Publisher", publishers, on_change=on_change)
             
             # Date input for date range search
-            start_date = st.date_input("After Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='start_date')
-            end_date = st.date_input("Before Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='end_date')
+            start_date = st.date_input("After Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='start_date', on_change=on_change)
+            end_date = st.date_input("Before Date", value=None, min_value=date(2010, 1, 1), max_value=date.today(), key='end_date', on_change=on_change)
             
             # Assuming you have a button to apply filters
             apply_filters = st.button("Apply Filters", key="apply_filters")
             if apply_filters:
-                update_filters(querier, folder_name_selected, vectordb_folder_path_selected, selected_publisher, start_date, end_date)
+                update_filters(querier, selected_publisher, start_date, end_date)
+                
+            if not st.session_state['filters_saved']:
+                st.error("You have unsaved filters!")
             
     # summary_type = st.sidebar.radio(
     #     "Start with summary?",
