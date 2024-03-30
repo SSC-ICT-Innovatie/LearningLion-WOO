@@ -180,7 +180,7 @@ def handle_query(my_querier, my_prompt: str):
         st.markdown(my_prompt)
     # Add user message to chat history
     st.session_state['messages'].append({"role": "user", "content": my_prompt})
-    with st.spinner("Thinking..."):
+    with st.spinner("Loading..."):
         # Generate a response
         response = my_querier.ask_question(my_prompt)
     if len(response["source_documents"]) > 0:
