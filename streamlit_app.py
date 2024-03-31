@@ -1,14 +1,15 @@
+import logging
 import os
+import settings
 import streamlit as st
-from PIL import Image
+from datetime import date
 from loguru import logger
-# local imports
+from PIL import Image
+
+import utils as ut
 from ingest.ingester import Ingester
 from query.querier import Querier
 from summarize.summarizer import Summarizer
-import settings
-import utils as ut
-from datetime import date
 
 
 def click_go_button():
