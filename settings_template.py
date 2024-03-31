@@ -126,3 +126,10 @@ Indien de context onvoldoende informatie bevat om de vraag te beantwoorden, verz
 
 ### QUESTION ### \n
 """
+
+# LOGGING must be boolean. When set to True, the user interactions are tracked and stored in a csv file.
+# The logging only applies with the strealit app, so not with the evaluation/commandline interface.
+LOGGING = False
+
+# LOGGING_FOLDER must be the folder where the log file is stored.
+LOGGING_FOLDER = "./logs"
