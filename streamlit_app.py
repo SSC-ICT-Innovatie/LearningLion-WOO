@@ -81,6 +81,7 @@ def show_results(documents, expand=True):
                         score: {score:.4f}{retrieval_method_info}{document_link}{dossier_link}**''')
             st.markdown(f"{document.page_content}")
 
+@st.cache_data
 def folderlist_creator():
     """
     Creates a list of folder names (without path).
@@ -108,14 +109,15 @@ def folder_selector(folders):
     st.session_state['folder_selected'] = my_folder_name_selected
     return my_folder_name_selected, my_folder_path_selected, my_vectordb_folder_path_selected
 
-def check_vectordb(my_querier, my_folder_name_selected, my_folder_path_selected, my_vectordb_folder_path_selected):
+@st.cache_resource
+def check_vectordb(_my_querier, my_folder_name_selected, my_folder_path_selected, my_vectordb_folder_path_selected):
     # If a folder is chosen that is not equal to the last known source folder
     if folder_name_selected != st.session_state['folder_selected']:
         # set session state of is_GO_clicked to False (will be set to True when OK button is clicked)
         st.session_state['is_GO_clicked'] = False
         # clear all chat messages on screen and in Querier object
         st.session_state['messages'] = []
-        my_querier.clear_history()
+        _my_querier.clear_history()
     # When the associated vector database of the chosen content folder doesn't exist with the settings as given
     # in settings.py, create it first
     if not os.path.exists(my_vectordb_folder_path_selected):
@@ -132,9 +134,9 @@ def check_vectordb(my_querier, my_folder_name_selected, my_folder_path_selected,
                             my_vectordb_folder_path_selected)
         ingester.ingest()
 
-    if not my_querier.chain:
+    if not _my_querier.chain:
         # create a new chain based on the new source folder
-        my_querier.make_chain(my_folder_name_selected, my_vectordb_folder_path_selected)
+        _my_querier.make_chain(my_folder_name_selected, my_vectordb_folder_path_selected)
         # set session state of selected folder to new source folder
         st.session_state['folder_selected'] = my_folder_name_selected
         logger.info("Executed check_vectordb")
@@ -205,8 +207,6 @@ def initialize_page():
         st.image(logo_image, width=250)
     with headercol:
         st.header(settings.APP_HEADER)
-    # set session state default for messages to fight hallucinations
-    # st.session_state.setdefault('messages', [{"role": "system", "content": "You are a helpful assistant.
     # Custom CSS to have white expander background
     st.markdown(
         '''
@@ -244,8 +244,6 @@ def initialize_session_state():
         st.session_state['messages'] = []
     if 'filters_saved' not in st.session_state:
         st.session_state['filters_saved'] = True
-    if 'checked_vectordb' not in st.session_state:
-        st.session_state['checked_vectordb'] = False
 
 @st.cache_resource
 def initialize_querier():
@@ -264,30 +262,23 @@ def set_page_config():
                        initial_sidebar_state='auto')
     logger.info("Executed set_page_config()")
 
-# ### MAIN PROGRAM ####
-# set page configuration, this is the first thing that needs to be done
+### MAIN PROGRAM ####
+# Set page configuration and initialize all necessary settings
 set_page_config()
-# initialize page, executed only once per session
 initialize_page()
-# create list of content folders
-source_folders_available = folderlist_creator()
-# initialize session state variables
 initialize_session_state()
-# creation of Querier object, executed only once per session
+# Creation of Querier object, only once per session
 querier = initialize_querier()
-# chosen folder and associated vector database
-folder_name_selected, folder_path_selected, vectordb_folder_path_selected = folder_selector(source_folders_available)
+# Chosen folder and associated vector database
+folder_name_selected, folder_path_selected, vectordb_folder_path_selected = folder_selector(folderlist_creator())
 
-# create button to confirm folder selection. This button sets session_state['is_GO_clicked'] to True
+# Create button to confirm folder selection. This button sets session_state['is_GO_clicked'] to True
 st.sidebar.button("GO", type="primary", on_click=click_go_button)
 
-# only start a conversation when a folder is selected and selection is confirmed with "GO" button
+# Start a conversation when a folder is selected and selection is confirmed with "GO" button
 if st.session_state['is_GO_clicked']:
     # Create or update vector database if necessary, only once per session
-    if not st.session_state['checked_vectordb']:
-        check_vectordb(querier, folder_name_selected, folder_path_selected, vectordb_folder_path_selected)
-        st.session_state['checked_vectordb'] = True
-        
+    check_vectordb(querier, folder_name_selected, folder_path_selected, vectordb_folder_path_selected)
     st.sidebar.divider()
     with st.sidebar.expander("Search filters"):
         def on_change():
