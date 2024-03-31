@@ -177,9 +177,26 @@ def update_filters(my_querier, selected_publisher, start_date, end_date):
     my_querier.filters = final_filters
     st.session_state['filters_saved'] = True
     st.success("Filters are successfully saved!")
+    log_action("Filters applied", publisher=selected_publisher, start_date=start_date, end_date=end_date)
     logger.info("Filters updated: ", my_querier.filters)
 
+def simplify_response(response):
+    simplified_docs = []
+    for document, score in response['source_documents']:
+        simplified_doc = {
+            'chunk': document.metadata['chunk'],
+            'documents_dc_source': document.metadata['documents_dc_source'],
+            'foi_documentId': document.metadata['foi_documentId'],
+            'foi_dossierId': document.metadata['foi_dossierId'],
+            'dossiers_dc_title': document.metadata['dossiers_dc_title'],
+            'retrieval_method': document.metadata.get('retrieval_method', 'Not specified'),
+            'score': score
+        }
+        simplified_docs.append(simplified_doc)
+    return simplified_docs
+
 def handle_query(my_querier, my_prompt: str):
+    log_action("Query", prompt=my_prompt)
     # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown(my_prompt)
@@ -188,6 +205,8 @@ def handle_query(my_querier, my_prompt: str):
     with st.spinner("Loading..."):
         # Generate a response
         response = my_querier.ask_question(my_prompt)
+        compact_response = simplify_response(response)
+        log_action("Response", response=compact_response)
     if len(response["source_documents"]) > 0:
         st.session_state['messages'].append({"role": "results", "content": response["source_documents"]})
     else:
@@ -233,7 +252,7 @@ def initialize_page():
     # Sidebar text for folder selection
     st.sidebar.title("Select your WOO folder")
     logger.info("Executed initialize_page()")
-
+    
 
 def initialize_session_state():
     if 'is_GO_clicked' not in st.session_state:
@@ -254,6 +273,26 @@ def initialize_querier():
     logger.info("Executed initialize_querier()")
     return my_querier
 
+@st.cache_resource
+def initialize_logger():
+    if settings.LOGGING:
+        # Create logging folder if it doesn't exist
+        if not os.path.exists(settings.LOGGING_FOLDER):
+            os.makedirs(settings.LOGGING_FOLDER)
+        current_time = ut.get_timestamp().replace(" ", "_").replace(":", "-")
+        log_filename = f"{settings.LOGGING_FOLDER}/log_{current_time}.log"
+        logging.basicConfig(level=logging.INFO,
+            format='%(asctime)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S',
+            handlers=[logging.FileHandler(log_filename, 'a', 'utf-8')])
+        
+def log_action(action, **kwargs):
+    if settings.LOGGING:
+        # Prepare additional details as a string
+        details = ', '.join(f"{key}={value}" for key, value in kwargs.items())
+        # Log action along with additional details
+        logging.info(f"{action} - {details}" if details else action)
+
 def set_page_config():
     favicon = Image.open("images/favicon.ico")
     st.set_page_config(page_title="SSC-ICT WOO-RAG",
@@ -265,8 +304,9 @@ def set_page_config():
 ### MAIN PROGRAM ####
 # Set page configuration and initialize all necessary settings
 set_page_config()
-initialize_page()
 initialize_session_state()
+initialize_page()
+initialize_logger()
 # Creation of Querier object, only once per session
 querier = initialize_querier()
 # Chosen folder and associated vector database
@@ -274,6 +314,10 @@ folder_name_selected, folder_path_selected, vectordb_folder_path_selected = fold
 
 # Create button to confirm folder selection. This button sets session_state['is_GO_clicked'] to True
 st.sidebar.button("GO", type="primary", on_click=click_go_button)
+
+# Set clear warning for the user when logging is enabled
+if settings.LOGGING and not st.session_state['is_GO_clicked']:
+    st.warning("Warning: Logging is enabled for this session. All actions are logged.")
 
 # Start a conversation when a folder is selected and selection is confirmed with "GO" button
 if st.session_state['is_GO_clicked']:
