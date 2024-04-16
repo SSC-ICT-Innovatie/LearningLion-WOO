@@ -64,64 +64,64 @@ querier.make_chain(content_folder_name, vectordb_folder_path)
 
 with open(f"../evaluation/{evaluation_file}", 'r') as file:
     json_data = json.load(file)
-    for i in range(2):
-        results_raw = {}
-        results = pd.DataFrame(columns=['#Relevant Pages', '#Relevant Pages Retrieved', '#Relevant Documents', '#Relevant Documents Retrieved', '#Relevant Dossiers', '#Relevant Dossiers Retrieved'])
-        for key, value in json_data.items():
-            if not value.get('pages'):
-                print("No pages found in the JSON file")
-                continue
-            if not value.get('documents'):
-                print("No documents found in the JSON file")
-                continue
-            if not value.get('dossier'):
-                print("No dossiers found in the JSON file")
-                continue
+for i in range(2):
+    results_raw = {}
+    results = pd.DataFrame(columns=['#Relevant Pages', '#Relevant Pages Retrieved', '#Relevant Documents', '#Relevant Documents Retrieved', '#Relevant Dossiers', '#Relevant Dossiers Retrieved'])
+    for key, value in json_data.items():
+        if not value.get('pages'):
+            print("No pages found in the JSON file")
+            continue
+        if not value.get('documents'):
+            print("No documents found in the JSON file")
+            continue
+        if not value.get('dossier'):
+            print("No dossiers found in the JSON file")
+            continue
 
-            if i == 0:
-                n_pages = len(value['pages'])
-                n_documents = len(value['documents'])
-                n_dossiers = len(value['dossier'])
-            else:
-                n_pages = 1
-                n_documents = 1
-                n_dossiers = 1
+        if i == 0:
+            n_pages = len(value['pages'])
+            n_documents = len(value['documents'])
+            n_dossiers = len(value['dossier'])
+        else:
+            n_pages = 1
+            n_documents = 1
+            n_dossiers = 1
+    
+        response = querier.ask_question(key)
+        source_documents = response["source_documents"]
         
-            response = querier.ask_question(key)
-            source_documents = response["source_documents"]
-            
-            pages_result = get_first_n_unique_ids_by_type(source_documents, n_pages, "id")
-            documents_result = get_first_n_unique_ids_by_type(source_documents, n_documents, "foi_documentId")
-            dossiers_result = get_first_n_unique_ids_by_type(source_documents, n_dossiers, "foi_dossierId")
-            
-            results_raw[key] = {
-                'pages': pages_result,
-                'documents': documents_result,
-                'dossier': dossiers_result
-            }
-            
-            new_row = [
-                len(value['pages']), #Relevant Pages
-                check_relevance(set(value['pages']), set(pages_result)), #Relevant Pages Retrieved
-                len(value['documents']), #Relevant Documents
-                check_relevance(set(value['documents']), set(documents_result)), #Relevant Documents Retrieved
-                len(value['dossier']), #Relevant Dossiers
-                check_relevance(set(value['dossier']), set(dossiers_result)), #Relevant Dossier Retrieved
-            ]
-            results.loc[len(results.index)] = new_row
-        base_directory = '../evaluation/results'
-        csv_file_name = f'{evaluation_file.split(".")[0]}_{"1" if i == 1 else "n"}_{settings.EMBEDDINGS_MODEL.split("/")[-1]}_request.csv'
-        csv_file_path = os.path.join(base_directory, csv_file_name)
+        pages_result = get_first_n_unique_ids_by_type(source_documents, n_pages, "id")
+        documents_result = get_first_n_unique_ids_by_type(source_documents, n_documents, "foi_documentId")
+        dossiers_result = get_first_n_unique_ids_by_type(source_documents, n_dossiers, "foi_dossierId")
+        
+        results_raw[key] = {
+            'pages': pages_result,
+            'documents': documents_result,
+            'dossier': dossiers_result
+        }
+        
+        new_row = [
+            len(value['pages']), #Relevant Pages
+            check_relevance(set(value['pages']), set(pages_result)), #Relevant Pages Retrieved
+            len(value['documents']), #Relevant Documents
+            check_relevance(set(value['documents']), set(documents_result)), #Relevant Documents Retrieved
+            len(value['dossier']), #Relevant Dossiers
+            check_relevance(set(value['dossier']), set(dossiers_result)), #Relevant Dossier Retrieved
+        ]
+        results.loc[len(results.index)] = new_row
+    base_directory = '../evaluation/results'
+    csv_file_name = f'{evaluation_file.split(".")[0]}_{"1" if i == 1 else "n"}_{settings.EMBEDDINGS_MODEL.split("/")[-1]}_request.csv'
+    csv_file_path = os.path.join(base_directory, csv_file_name)
 
-        # Check if the /results directory exists, if not, create it
-        if not os.path.exists(base_directory):
-            os.makedirs(base_directory)
+    # Check if the /results directory exists, if not, create it
+    if not os.path.exists(base_directory):
+        os.makedirs(base_directory)
 
-        results.to_csv(csv_file_path, index=False)
+    results.to_csv(csv_file_path, index=False)
 
-        # Saving results_raw dictionary to a JSON file
-        json_file_name = f'{evaluation_file.split(".")[0]}_{"1" if i == 1 else "n"}_{settings.EMBEDDINGS_MODEL.split("/")[-1]}_request_raw.json'
-        json_file_path = os.path.join(base_directory, json_file_name)
+    # Saving results_raw dictionary to a JSON file
+    json_file_name = f'{evaluation_file.split(".")[0]}_{"1" if i == 1 else "n"}_{settings.EMBEDDINGS_MODEL.split("/")[-1]}_request_raw.json'
+    json_file_path = os.path.join(base_directory, json_file_name)
 
-        with open(json_file_path, 'w') as file:
-            json.dump(results_raw, file)
+    with open(json_file_path, 'w') as file:
+        json.dump(results_raw, file)
