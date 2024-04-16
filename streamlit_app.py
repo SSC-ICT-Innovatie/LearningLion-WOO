@@ -185,11 +185,11 @@ def simplify_response(response):
     for document, score in response['source_documents']:
         simplified_doc = {
             'chunk': document.metadata['chunk'],
-            'documents_dc_source': document.metadata['documents_dc_source'],
-            'foi_documentId': document.metadata['foi_documentId'],
-            'foi_dossierId': document.metadata['foi_dossierId'],
-            'dossiers_dc_title': document.metadata['dossiers_dc_title'],
-            'retrieval_method': document.metadata.get('retrieval_method', 'Not specified'),
+            'documents_dc_source': document.metadata.get('documents_dc_source', 'N/A'),
+            'foi_documentId': document.metadata.get('foi_documentId', 'N/A'),
+            'foi_dossierId': document.metadata.get('foi_dossierId', 'N/A'),
+            'dossiers_dc_title': document.metadata.get('dossiers_dc_title', 'N/A'),
+            'retrieval_method': document.metadata.get('retrieval_method', 'N/A'),
             'score': score
         }
         simplified_docs.append(simplified_doc)
