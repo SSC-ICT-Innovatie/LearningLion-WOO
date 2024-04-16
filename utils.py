@@ -10,13 +10,15 @@ from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
 import settings
 
 
-def create_vectordb_name(content_folder_name, chunk_size=None, chunk_overlap=None):
+def create_vectordb_name(content_folder_name, chunk_size=None, chunk_overlap=None, embeddings_provider=None, embeddings_model=None):
     content_folder_path = os.path.join(settings.DOC_DIR, content_folder_name)
-    # vectordb_name is created from vecdb_type, chunk_size, chunk_overlap, embeddings_type 
-    if chunk_size:
-        vectordb_name = "_" + settings.VECDB_TYPE + "_" + str(chunk_size) + "_" + str(chunk_overlap) + "_" + settings.EMBEDDINGS_PROVIDER + "_" + settings.EMBEDDINGS_MODEL
-    else:
-        vectordb_name = "_" + settings.VECDB_TYPE + "_" + str(settings.CHUNK_SIZE) + "_" + str(settings.CHUNK_OVERLAP) + "_" + settings.EMBEDDINGS_PROVIDER + "_" + settings.EMBEDDINGS_MODEL
+    chunk_size = chunk_size if chunk_size else settings.CHUNK_SIZE
+    chunk_overlap = chunk_overlap if chunk_overlap else settings.CHUNK_OVERLAP
+    embeddings_provider = embeddings_provider if embeddings_provider else settings.EMBEDDINGS_PROVIDER
+    embeddings_model = embeddings_model if embeddings_model else settings.EMBEDDINGS_MODEL
+    
+    vectordb_name = "_" + settings.VECDB_TYPE + "_" + str(chunk_size) + "_" + str(chunk_overlap) + "_" + str(embeddings_provider) + "_" + str(embeddings_model)
+    
     vectordb_folder_path = os.path.join(settings.VECDB_DIR, content_folder_name) + vectordb_name 
     return content_folder_path, vectordb_folder_path
 
