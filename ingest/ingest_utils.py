@@ -25,19 +25,31 @@ class IngestUtils:
         """
         Merge words in the text that have been split with a hyphen.
         """
-        return re.sub(r"(\w)-\n(\w)", r"\1\2", text)
+        try:
+            text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)
+        except:
+            return ""
+        return text
 
     def fix_newlines(self, text: str) -> str:
         """
         Replace single newline characters in the text with spaces.
         """
-        return re.sub(r"(?<!\n)\n(?!\n)", " ", text)
+        try:
+            text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
+        except:
+            return ""
+        return text
 
     def remove_multiple_newlines(self, text: str) -> str:
         """
         Reduce multiple newline characters in the text to a single newline.
         """
-        return re.sub(r"\n{2,}", "\n", text)
+        try:
+            text = re.sub(r"\n{2,}", "\n", text)
+        except:
+            return ""
+        return text
 
     def clean_text(self,
                    pages: List[Tuple[int, str]],
