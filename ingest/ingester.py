@@ -50,11 +50,11 @@ class Ingester:
         """
         Chooses the right method to ingest the data
         """
-        match self.data_type:
-            case "woo":
+        if self.data_type:
+            if self.data_type == "woo":
                 logger.info("Ingesting woo data")
                 self.ingest_woo()
-            case _:
+            else:
                 logger.info("Ingesting standard data")
                 self.ingest_standard()
 
@@ -163,17 +163,36 @@ class Ingester:
         
         if self.vecdb_type == "chromadb":
             # Set the datatypes for the columns
-            dtypes={"id": str, "foi_documentId": str, "foi_dossierId": str, "bodytext_foi_pageNumber": int, "bodytext_foi_bodyText": str, "bodytext_foi_bodyTextOCR": str, "bodytext_foi_hasOCR": bool, "bodytext_foi_redacted": float, "bodytext_foi_nrRedactedRegions": int, "bodytext_foi_contourArea": float, "bodytext_foi_textArea": float, "bodytext_foi_charArea": float, "bodytext_foi_percentageTextAreaRedacted": float, "bodytext_foi_percentageCharAreaRedacted": float, "bodytext_foi_imageArea": int, "bodytext_foi_imageCoversFullPage": int, "bodytext_foi_bodyTextJaccard": float, "documents_dc_title": str, "documents_dc_description": str, "documents_foi_fileName": str, "documents_dc_format": str, "documents_dc_source": str, "documents_dc_type": str, "documents_foi_nrPages": int, "documents_foi_pdfDateCreated": str, "documents_foi_pdfDateModified": str, "documents_foi_pdfCreator": str, "documents_foi_pdfProducer": str, "documents_foi_pdfAuthor": str, "documents_foi_pdfCompany": str, "documents_foi_pdfTitle": str, "documents_foi_pdfSubject": str, "documents_foi_pdfKeywords": str, "documents_foi_fairiscore": int, "dossiers_dc_title": str, "dossiers_dc_description": str, "dossiers_dc_type": str, "dossiers_dc_type_description": str, "dossiers_dc_publisher": str, "dossiers_dc_publisher_name": str, "dossiers_dc_source": str, "dossiers_foi_valuation": str, "dossiers_foi_requestText": str, "dossiers_foi_decisionText": str, "dossiers_foi_isAdjourned": str, "dossiers_foi_requester": str, "dossiers_foi_fairiscore": int, "dossiers_tooiwl_rubriek": str, "dossiers_tooiwl_rubriekCode": str, "dossiers_foi_geoInfo": str}
+            # dtypes={"id": str, "foi_documentId": str, "foi_dossierId": str, "bodytext_foi_pageNumber": int, "bodytext_foi_bodyText": str, "bodytext_foi_bodyTextOCR": str, "bodytext_foi_hasOCR": bool, "bodytext_foi_redacted": int, "bodytext_foi_nrRedactedRegions": int, "bodytext_foi_contourArea": float, "bodytext_foi_textArea": float, "bodytext_foi_charArea": float, "bodytext_foi_percentageTextAreaRedacted": float, "bodytext_foi_percentageCharAreaRedacted": float, "bodytext_foi_imageArea": int, "bodytext_foi_imageCoversFullPage": int, "bodytext_foi_bodyTextJaccard": float, "documents_dc_title": str, "documents_dc_description": str, "documents_foi_fileName": str, "documents_dc_format": str, "documents_dc_source": str, "documents_dc_type": str, "documents_foi_nrPages": int, "documents_foi_pdfDateCreated": str, "documents_foi_pdfDateModified": str, "documents_foi_pdfCreator": str, "documents_foi_pdfProducer": str, "documents_foi_pdfAuthor": str, "documents_foi_pdfCompany": str, "documents_foi_pdfTitle": str, "documents_foi_pdfSubject": str, "documents_foi_pdfKeywords": str, "documents_foi_fairiscore": int, "dossiers_dc_title": str, "dossiers_dc_description": str, "dossiers_dc_type": str, "dossiers_dc_type_description": str, "dossiers_dc_publisher": str, "dossiers_dc_publisher_name": str, "dossiers_dc_source": str, "dossiers_foi_valuation": str, "dossiers_foi_requestText": str, "dossiers_foi_decisionText": str, "dossiers_foi_isAdjourned": str, "dossiers_foi_requester": str, "dossiers_foi_fairiscore": int, "dossiers_tooiwl_rubriek": str, "dossiers_tooiwl_rubriekCode": str, "dossiers_foi_geoInfo": str}
+            dtypes=dtypes = {"id": str, "foi_documentId": str, "foi_dossierId": str, "documents_dc_title": str, "documents_dc_description": str, "documents_foi_fileName": str, "documents_dc_format": str, "documents_dc_source": str, "documents_dc_type": str, "documents_foi_nrPages": int, "documents_foi_pdfDateCreated": str, "documents_foi_pdfDateModified": str, "documents_foi_pdfCreator": str, "documents_foi_pdfProducer": str, "documents_foi_pdfAuthor": str, "documents_foi_pdfCompany": str, "documents_foi_pdfTitle": str, "documents_foi_pdfSubject": str, "documents_foi_pdfKeywords": str, "dossiers_dc_title": str, "dossiers_dc_description": str, "dossiers_dc_type": str, "dossiers_dc_type_description": str, "dossiers_dc_publisher": str, "dossiers_dc_publisher_name": str, "dossiers_dc_source": str, "dossiers_foi_valuation": str, "dossiers_foi_requestText": str, "dossiers_foi_decisionText": str, "dossiers_foi_isAdjourned": str, "dossiers_foi_requester": str, "dossiers_tooiwl_rubriek": str, "dossiers_tooiwl_rubriekCode": str, "dossiers_foi_geoInfo": str}
             woo_data = pd.read_csv(f'{self.content_folder}/woo_merged.csv.gz', parse_dates=['dossiers_foi_publishedDate', 'dossiers_dc_date_year', 'dossiers_foi_requestDate', 'dossiers_foi_decisionDate', 'dossiers_foi_retrievedDate'], dtype=dtypes).set_index('id')
+            woo_data.reset_index(inplace=True)
+            # print(woo_data.head(1))
+            # Convert these columns to string, handling NaN values appropriately
+            string_columns = [
+                "id", "foi_documentId", "foi_dossierId", "documents_dc_title", "documents_dc_description",
+                "documents_foi_fileName", "documents_dc_format", "documents_dc_source", "documents_dc_type",
+                "documents_foi_pdfDateCreated", "documents_foi_pdfDateModified", "documents_foi_pdfCreator",
+                "documents_foi_pdfProducer", "documents_foi_pdfAuthor", "documents_foi_pdfCompany",
+                "documents_foi_pdfTitle", "documents_foi_pdfSubject", "documents_foi_pdfKeywords",
+                "dossiers_dc_title", "dossiers_dc_description", "dossiers_dc_type",
+                "dossiers_dc_type_description", "dossiers_dc_publisher", "dossiers_dc_publisher_name",
+                "dossiers_dc_source", "dossiers_foi_valuation", "dossiers_foi_requestText",
+                "dossiers_foi_decisionText", "dossiers_foi_isAdjourned", "dossiers_foi_requester",
+                "dossiers_tooiwl_rubriek", "dossiers_tooiwl_rubriekCode", "dossiers_foi_geoInfo"
+            ]
+
+            for column in string_columns:
+                woo_data[column] = woo_data[column].astype(str).replace('nan', np.nan)
             
             # First merge all the different pages of a document into one row
-            woo_data['all_foi_bodyText'] = np.where(woo_data['bodytext_foi_bodyText'].notnull() & woo_data['bodytext_foi_bodyText'].str.strip().ne(''), woo_data['bodytext_foi_bodyText'], woo_data['bodytext_foi_bodyTextOCR'])
+            woo_data['all_foi_bodyText'] = np.where(woo_data['bodytext_foi_bodyTextOCR'].notnull() & woo_data['bodytext_foi_bodyTextOCR'].str.strip().ne(''), woo_data['bodytext_foi_bodyTextOCR'], woo_data['bodytext_foi_bodyText'])
             grouped_bodyText = woo_data.groupby('foi_documentId')['all_foi_bodyText'].apply(list).reset_index()
             unique_woo_data = woo_data.drop_duplicates(subset='foi_documentId')
             parsed_woo_data = pd.merge(unique_woo_data.reset_index(), grouped_bodyText, on='foi_documentId', how='left', suffixes=('', '_grouped'))
             
             # Only keep the relevant data
-            filtered_woo_data = parsed_woo_data[['foi_documentId', 'foi_dossierId', 'documents_dc_title', 'documents_dc_description', 'documents_foi_fileName', 'documents_dc_format', 'documents_dc_source', 'documents_dc_type', 'documents_foi_nrPages', 'documents_foi_pdfDateCreated', 'documents_foi_pdfDateModified', 'documents_foi_pdfCreator', 'documents_foi_pdfProducer', 'documents_foi_pdfAuthor', 'documents_foi_pdfCompany', 'documents_foi_pdfTitle', 'documents_foi_pdfSubject', 'documents_foi_pdfKeywords', 'dossiers_dc_title', 'dossiers_dc_description', 'dossiers_dc_type', 'dossiers_dc_type_description', 'dossiers_dc_publisher', 'dossiers_dc_publisher_name', 'dossiers_dc_source', 'dossiers_foi_publishedDate', 'dossiers_dc_date_year', 'dossiers_foi_requestDate', 'dossiers_foi_decisionDate', 'dossiers_foi_valuation', 'dossiers_foi_requestText', 'dossiers_foi_decisionText', 'dossiers_foi_isAdjourned', 'dossiers_foi_requester', 'dossiers_foi_retrievedDate', 'dossiers_tooiwl_rubriek', 'dossiers_tooiwl_rubriekCode', 'dossiers_foi_geoInfo', 'all_foi_bodyText_grouped']]
+            filtered_woo_data = parsed_woo_data[['id', 'foi_documentId', 'foi_dossierId', 'documents_dc_title', 'documents_dc_description', 'documents_foi_fileName', 'documents_dc_format', 'documents_dc_source', 'documents_dc_type', 'documents_foi_nrPages', 'documents_foi_pdfDateCreated', 'documents_foi_pdfDateModified', 'documents_foi_pdfCreator', 'documents_foi_pdfProducer', 'documents_foi_pdfAuthor', 'documents_foi_pdfCompany', 'documents_foi_pdfTitle', 'documents_foi_pdfSubject', 'documents_foi_pdfKeywords', 'dossiers_dc_title', 'dossiers_dc_description', 'dossiers_dc_type', 'dossiers_dc_type_description', 'dossiers_dc_publisher', 'dossiers_dc_publisher_name', 'dossiers_dc_source', 'dossiers_foi_publishedDate', 'dossiers_dc_date_year', 'dossiers_foi_requestDate', 'dossiers_foi_decisionDate', 'dossiers_foi_valuation', 'dossiers_foi_requestText', 'dossiers_foi_decisionText', 'dossiers_foi_isAdjourned', 'dossiers_foi_requester', 'dossiers_foi_retrievedDate', 'dossiers_tooiwl_rubriek', 'dossiers_tooiwl_rubriekCode', 'dossiers_foi_geoInfo', 'all_foi_bodyText_grouped']]
            
             # Creating a copy of the filtered DataFrame to avoid SettingWithCopyWarning
             filtered_woo_data_copy = filtered_woo_data.copy()
@@ -235,16 +254,24 @@ class Ingester:
                     # Convert the raw text to cleaned text chunks
                     documents = ingestutils.clean_text_to_docs(raw_pages, metadata)
                     
-                    vector_store.add_documents(
-                        documents=documents,
-                        embedding=embeddings,
-                        collection_name=self.collection_name,
-                        persist_directory=self.vectordb_folder,
-                        ids=[str(id) for id in list(range(start_id, start_id + len(documents)))]
-                    )
-                    collection = vector_store.get()
-                    collection_ids = [int(id) for id in collection['ids']]
-                    start_id = max(collection_ids) + 1
+                    # If there are no documents, continue to the next iteration
+                    if len(documents) == 0:
+                        continue
+                    
+                    try:
+                        vector_store.add_documents(
+                            documents=documents,
+                            embedding=embeddings,
+                            collection_name=self.collection_name,
+                            persist_directory=self.vectordb_folder,
+                            ids=[str(id) for id in list(range(start_id, start_id + len(documents)))]
+                        )
+                        collection = vector_store.get()
+                        collection_ids = [int(id) for id in collection['ids']]
+                        start_id = max(collection_ids) + 1
+                    except Exception as e:
+                        logger.error(f"Error adding documents to vector store: {e}")
+                        continue
                 logger.info("Added files to vectorstore")
                 
                 # Save updated vector store to disk
