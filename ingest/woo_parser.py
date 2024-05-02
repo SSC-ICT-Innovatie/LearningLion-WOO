@@ -42,3 +42,27 @@ class WooParser:
        
         return tuple_bodyText, woo_json
     
+    def parse_woo_simple(self, woo: pd.core.series.Series) -> Tuple[List[Tuple[int, str]], Dict[str, any]]:
+        woo_json = woo.to_dict()
+        
+        # If type is not string, return None
+        if type(woo_json['bodyText']) != str:
+            return None, None
+                
+        # Create a tuple with the index and the bodyText
+        # tuple_bodyText = [(i, s) for i, s in enumerate(woo_json['bodyText'])]
+        
+        # if len(tuple_bodyText) == 0:
+        #     return None, None
+        
+        # Hardcode the array of tuple, because t=as the way it is currently coded there is only 1 tuple in every page:
+        tuple_bodyText = [(0, woo_json['bodyText'])]
+        
+        # Delete the 'bodyText' key from the dictionary, because it is not metadata
+        woo_json.pop('bodyText', None)
+        
+        # Convert 'NaT' to 'NaN' in the dictionary, and timestamps to string
+        self.convert_nat_to_nan(woo_json)
+        self.convert_timestamp_to_str(woo_json)
+        
+        return tuple_bodyText, woo_json
