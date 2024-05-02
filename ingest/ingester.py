@@ -54,6 +54,9 @@ class Ingester:
             if self.data_type == "woo":
                 logger.info("Ingesting woo data")
                 self.ingest_woo()
+            elif self.data_type == "woo-simple":
+                logger.info("Ingesting woo-simple data")
+                self.ingest_woo_simple()
             else:
                 logger.info("Ingesting standard data")
                 self.ingest_standard()
@@ -186,6 +189,7 @@ class Ingester:
                 woo_data[column] = woo_data[column].astype(str).replace('nan', np.nan)
             
             # First merge all the different pages of a document into one row
+            # First take bodyTextOCR if it is not empty, else take bodyText
             woo_data['all_foi_bodyText'] = np.where(woo_data['bodytext_foi_bodyTextOCR'].notnull() & woo_data['bodytext_foi_bodyTextOCR'].str.strip().ne(''), woo_data['bodytext_foi_bodyTextOCR'], woo_data['bodytext_foi_bodyText'])
             grouped_bodyText = woo_data.groupby('foi_documentId')['all_foi_bodyText'].apply(list).reset_index()
             unique_woo_data = woo_data.drop_duplicates(subset='foi_documentId')
@@ -248,6 +252,86 @@ class Ingester:
                 for index, row in woo_data.reset_index().iterrows():
                     # Extract raw text pages and metadata
                     raw_pages, metadata = woo_parser.parse_woo(row)
+                    if raw_pages is None or metadata is None:
+                        continue
+                    
+                    # Convert the raw text to cleaned text chunks
+                    documents = ingestutils.clean_text_to_docs(raw_pages, metadata)
+                    
+                    # If there are no documents, continue to the next iteration
+                    if len(documents) == 0:
+                        continue
+                    
+                    try:
+                        vector_store.add_documents(
+                            documents=documents,
+                            embedding=embeddings,
+                            collection_name=self.collection_name,
+                            persist_directory=self.vectordb_folder,
+                            ids=[str(id) for id in list(range(start_id, start_id + len(documents)))]
+                        )
+                        collection = vector_store.get()
+                        collection_ids = [int(id) for id in collection['ids']]
+                        start_id = max(collection_ids) + 1
+                    except Exception as e:
+                        logger.error(f"Error adding documents to vector store: {e}")
+                        continue
+                logger.info("Added files to vectorstore")
+                
+                # Save updated vector store to disk
+                vector_store.persist()
+            else:
+                logger.warning(f"No new woo documents to be ingested")
+
+    def ingest_woo_simple(self) -> None:
+        woo_parser = WooParser()
+        ingestutils = IngestUtils(self.chunk_size, self.chunk_overlap, self.file_no, self.text_splitter_method)
+
+        # Get embeddings
+        embeddings = ut.getEmbeddings(self.embeddings_provider, self.embeddings_model, self.local_api_url, self.azureopenai_api_version)
+        woo_data = pd.read_csv(f'{self.content_folder}/woo_merged.csv.gz')
+        if self.vecdb_type == "chromadb":
+            # If the vector store already exists, get the set of ingested files from the vector store
+            if os.path.exists(self.vectordb_folder):
+                vector_store = ut.get_chroma_vector_store(self.collection_name, embeddings, self.vectordb_folder)
+                # Determine the files that are added or deleted
+                collection = vector_store.get()  # dict_keys(['ids', 'embeddings', 'documents', 'metadatas'])
+                collection_ids = [int(id) for id in collection['ids']]
+                files_in_store = [metadata['foi_documentId'] for metadata in collection['metadatas']]
+                files_in_store = list(set(files_in_store))
+                # Check if there are any deleted items
+                files_deleted = [file for file in files_in_store if file not in woo_data['foi_documentId'].tolist()]
+                if len(files_deleted) > 0:
+                    logger.info(f"Files are deleted, so vector store for {self.content_folder} needs to be updated")
+                    idx_id_to_delete = []
+                    for idx in range(len(collection['ids'])):
+                        idx_id = collection['ids'][idx]
+                        idx_metadata = collection['metadatas'][idx]
+                        if idx_metadata['foi_documentId'] in files_deleted:
+                            idx_id_to_delete.append(idx_id)
+                    vector_store.delete(idx_id_to_delete)
+                    logger.info("Deleted files from vectorstore")
+                # Check if there is new data and only keep the new data
+                woo_data = woo_data[~woo_data['foi_documentId'].isin(files_in_store)]
+                collection = vector_store.get()  # dict_keys(['ids', 'embeddings', 'documents', 'metadatas'])
+                collection_ids = [int(id) for id in collection['ids']]
+                if len(collection_ids) == 0:
+                    start_id = 0
+                else:
+                    start_id = max(collection_ids) + 1
+            # Else it needs to be created first
+            else:
+                logger.info(f"Vector store to be created for folder {self.content_folder}")
+                # Get chroma vector store
+                vector_store = ut.get_chroma_vector_store(self.collection_name, embeddings, self.vectordb_folder)
+                collection = vector_store.get()  # dict_keys(['ids', 'embeddings', 'documents', 'metadatas'])
+                start_id = 0
+                
+            if len(woo_data) > 0:
+                logger.info(f"Files are added, so vector store for {self.content_folder} needs to be updated")
+                for index, row in woo_data.reset_index().iterrows():
+                    # Extract raw text pages and metadata
+                    raw_pages, metadata = woo_parser.parse_woo_simple(row)
                     if raw_pages is None or metadata is None:
                         continue
                     
