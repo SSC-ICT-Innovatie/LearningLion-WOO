@@ -297,22 +297,22 @@ class Ingester:
                 # Determine the files that are added or deleted
                 collection = vector_store.get()  # dict_keys(['ids', 'embeddings', 'documents', 'metadatas'])
                 collection_ids = [int(id) for id in collection['ids']]
-                files_in_store = [metadata['foi_documentId'] for metadata in collection['metadatas']]
+                files_in_store = [metadata['document_id'] for metadata in collection['metadatas']]
                 files_in_store = list(set(files_in_store))
                 # Check if there are any deleted items
-                files_deleted = [file for file in files_in_store if file not in woo_data['foi_documentId'].tolist()]
+                files_deleted = [file for file in files_in_store if file not in woo_data['document_id'].tolist()]
                 if len(files_deleted) > 0:
                     logger.info(f"Files are deleted, so vector store for {self.content_folder} needs to be updated")
                     idx_id_to_delete = []
                     for idx in range(len(collection['ids'])):
                         idx_id = collection['ids'][idx]
                         idx_metadata = collection['metadatas'][idx]
-                        if idx_metadata['foi_documentId'] in files_deleted:
+                        if idx_metadata['document_id'] in files_deleted:
                             idx_id_to_delete.append(idx_id)
                     vector_store.delete(idx_id_to_delete)
                     logger.info("Deleted files from vectorstore")
                 # Check if there is new data and only keep the new data
-                woo_data = woo_data[~woo_data['foi_documentId'].isin(files_in_store)]
+                woo_data = woo_data[~woo_data['document_id'].isin(files_in_store)]
                 collection = vector_store.get()  # dict_keys(['ids', 'embeddings', 'documents', 'metadatas'])
                 collection_ids = [int(id) for id in collection['ids']]
                 if len(collection_ids) == 0:
