@@ -1,6 +1,6 @@
 # Examples with arguments:
-# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
-# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
+# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --results_path ./evaluation/results --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
+# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --results_path ./evaluation/results --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
 
 import os
 from dotenv import load_dotenv
@@ -28,27 +28,19 @@ def main():
     parser.add_argument("--embedding_function", required=True, type=str)
     parser.add_argument("--collection_name", required=True, type=str)
     parser.add_argument("--vector_db_folder", required=True, type=str)
+    parser.add_argument("--results_path", type=str, required=True)
 
     args = parser.parse_args()
-    if (
-        args.content_folder_name
-        and args.documents_directory
-        and args.embedding_provider
-        and args.embedding_author
-        and args.embedding_function
-        and args.collection_name
-        and args.vector_db_folder
-    ):
-        content_folder_name = args.content_folder_name
-        documents_directory = args.documents_directory
-        embedding_provider = args.embedding_provider
-        embedding_author = args.embedding_author
-        embedding_function = args.embedding_function
-        complete_embedding_function = f"{embedding_author}/{embedding_function}"
-        collection_name = args.collection_name
-        vector_db_folder = args.vector_db_folder
-    else:
-        raise ValueError("Please provide all arguments.")
+
+    content_folder_name = args.content_folder_name
+    documents_directory = args.documents_directory
+    embedding_provider = args.embedding_provider
+    embedding_author = args.embedding_author
+    embedding_function = args.embedding_function
+    complete_embedding_function = f"{embedding_author}/{embedding_function}"
+    collection_name = args.collection_name
+    vector_db_folder = args.vector_db_folder
+    results_path = args.results_path
 
     querier = Querier(
         embeddings_provider=embedding_provider,
@@ -88,7 +80,7 @@ def main():
     )
     # First create ground truth
     woo_data = pd.read_csv(
-        f"./{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
+        f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
     )
     for _, row in woo_data.iterrows():
         if pd.isna(row["bodyText"]):
@@ -148,7 +140,7 @@ def main():
         result.loc[len(result)] = new_row
 
     result.to_csv(
-        f"evaluation/results/document_similarity_{content_folder_name}_{collection_name}_{embedding_function}.csv"
+        f"{results_path}/document_similarity_{content_folder_name}_{collection_name}_{embedding_function}.csv"
     )
     print(
         f"[Info] ~ Result embeddings document similarity for {content_folder_name} with {embedding_function} saved.",

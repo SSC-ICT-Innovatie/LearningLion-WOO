@@ -1,10 +1,10 @@
 # This script will generate an ground truth evaluation file for the requests in the woo-dossiers.
-# The script will generate a JSON file with the following structure:
+# It will generate a JSON file with the following structure:
 # { "bodytext": {"pages": [page1, page2, ...], "documents": [document1, document2, ...], "dossier": [dossierId] }
 
 # Examples with arguments:
-# python create_evaluation_file.py -c WoogleDumps_01-04-2024_12817_dossiers_12_dossiers -d ./docs -e ./evaluation
-# python create_evaluation_file.py -c 12_dossiers -d ./docs -e ./evaluation
+# python create_evaluation_file.py --content_folder_name WoogleDumps_01-04-2024_12817_dossiers_12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
+# python create_evaluation_file.py --content_folder_name 12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
 
 import json
 import os
@@ -15,21 +15,14 @@ from argparse import ArgumentParser
 def main():
     # Parse all the arguments and read the settings
     parser = ArgumentParser()
-    parser.add_argument("-c", "--content_folder_name", type=str)
-    parser.add_argument("-d", "--documents_directory", type=str)
-    parser.add_argument("-e", "--evaluation_directory", type=str)
+    parser.add_argument("--content_folder_name", type=str, required=True)
+    parser.add_argument("--documents_directory", type=str, required=True)
+    parser.add_argument("--evaluation_directory", type=str, required=True)
     args = parser.parse_args()
 
-    if (
-        args.content_folder_name
-        and args.documents_directory
-        and args.evaluation_directory
-    ):
-        content_folder_name = args.content_folder_name
-        documents_directory = args.documents_directory
-        evaluation_directory = args.evaluation_directory
-    else:
-        raise ValueError("Please provide all arguments.")
+    content_folder_name = args.content_folder_name
+    documents_directory = args.documents_directory
+    evaluation_directory = args.evaluation_directory
     print(f"[Info] ~ Source folder of documents: {content_folder_name}")
 
     file_path = f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"

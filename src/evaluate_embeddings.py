@@ -1,6 +1,6 @@
 # Example with arguments:
-# python evaluate_embeddings.py --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
-# python evaluate_embeddings.py --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
+# python evaluate_embeddings.py --results_path ./evaluation/results --evaluation_directory ./evaluation --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
+# python evaluate_embeddings.py --results_path ./evaluation/results --evaluation_directory ./evaluation --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
 
 import os
 from dotenv import load_dotenv
@@ -22,37 +22,25 @@ from common.querier import Querier
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("-e", "--evaluation_file", type=str)
-    parser.add_argument("-p", "--embedding_provider", type=str)
-    parser.add_argument("-a", "--embedding_author", type=str)
-    parser.add_argument("-f", "--embedding_function", type=str)
-    parser.add_argument("-c", "--collection_name", type=str)
-    parser.add_argument("-v", "--vector_db_folder", type=str)
-
+    parser.add_argument("--evaluation_file", type=str, required=True)
+    parser.add_argument("--embedding_author", type=str, required=True)
+    parser.add_argument("--embedding_function", type=str, required=True)
+    parser.add_argument("--collection_name", type=str, required=True)
+    parser.add_argument("--vector_db_folder", type=str, required=True)
+    parser.add_argument("--results_path", type=str, required=True)
+    parser.add_argument("--evaluation_directory", type=str, required=True)
+    
     args = parser.parse_args()
-    if (
-        args.evaluation_file
-        and args.embedding_provider
-        and args.embedding_author
-        and args.embedding_function
-        and args.collection_name
-        and args.vector_db_folder
-    ):
-        evaluation_file = args.evaluation_file
-        embedding_provider = args.embedding_provider
-        embedding_author = args.embedding_author
-        embedding_function = args.embedding_function
-        complete_embedding_function = f"{embedding_author}/{embedding_function}"
-        collection_name = args.collection_name
-        vector_db_folder = args.vector_db_folder
-    else:
-        print(
-            "Please provide the source folder of documents, the output folder name, and the database directory.",
-            flush=True,
-        )
-        exit()
+    
+    evaluation_file = args.evaluation_file
+    embedding_author = args.embedding_author
+    embedding_function = args.embedding_function
+    collection_name = args.collection_name
+    vector_db_folder = args.vector_db_folder
+    results_path = args.results_path
+    evaluation_directory = args.evaluation_directory
 
-    with open(f"./evaluation/{evaluation_file}", "r") as file:
+    with open(f"{evaluation_directory}/{evaluation_file}", "r") as file:
         evaluation = json.load(file)
 
     # If vector store folder does not exist, stop
@@ -66,8 +54,7 @@ def main():
     querier.make_chain(collection_name, vector_db_folder)
 
     # Determine file paths
-    csv_file_path = f'./evaluation/results/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request.csv'
-    json_file_path = f'./evaluation/results/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request_raw.json'
+    csv_file_path = f'{results_path}/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request.csv'
     last_index = -1
 
     # Check if csv file exists
@@ -174,7 +161,7 @@ def main():
         result.loc[len(result)] = new_row
 
     loc = f'{evaluation_file.split(".")[0]}_{collection_name}_{embedding_function}_request.csv'
-    result.to_csv(f"evaluation/results/{loc}")
+    result.to_csv(f"{results_path}/{loc}")
 
 
 if __name__ == "__main__":

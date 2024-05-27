@@ -1,6 +1,6 @@
 # Examples with arguments:
-# python evaluate_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --dataset_folder_name 12_dossiers_no_requests --results_folder ./evaluation/results
-# python evaluate_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --dataset_folder_name 60_dossiers_no_requests --results_folder ./evaluation/results
+# python evaluate_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --dataset_folder_name 12_dossiers_no_requests --results_path ./evaluation/results
+# python evaluate_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --dataset_folder_name 60_dossiers_no_requests --results_path ./evaluation/results
 
 import heapq
 import pandas as pd
@@ -11,24 +11,17 @@ from common import evaluate_helpers
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--content_folder_name", type=str)
-    parser.add_argument("--documents_directory", type=str)
-    parser.add_argument("--dataset_folder_name", type=str)
-    parser.add_argument("--results_folder", type=str)
+    parser.add_argument("--content_folder_name", type=str, required=True)
+    parser.add_argument("--documents_directory", type=str, required=True)
+    parser.add_argument("--dataset_folder_name", type=str, required=True)
+    parser.add_argument("--results_path", type=str, required=True)
     args = parser.parse_args()
 
-    if (
-        args.content_folder_name
-        and args.documents_directory
-        and args.dataset_folder_name
-        and args.results_folder
-    ):
-        content_folder_name = args.content_folder_name
-        documents_directory = args.documents_directory
-        dataset_folder_name = args.dataset_folder_name
-        results_folder = args.results_folder
-    else:
-        raise ValueError("Please provide all arguments.")
+    content_folder_name = args.content_folder_name
+    documents_directory = args.documents_directory
+    dataset_folder_name = args.dataset_folder_name
+    results_path = args.results_path
+
 
     woo_data = pd.read_csv(
         f"./{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
@@ -37,7 +30,7 @@ def main():
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
 
-    print(f"Number of documents in corpus: {len(corpus)}", flush=True)
+    print(f"[Info] ~ Number of documents in corpus: {len(corpus)}", flush=True)
 
     # Do preprocessing for echt document
     tokenized_corpus = [evaluate_helpers.preprocess_text(doc) for doc in corpus]
@@ -133,7 +126,7 @@ def main():
         result.loc[len(result)] = new_row
 
     result.to_csv(
-        f"{results_folder}/document_similarity_{content_folder_name}_{dataset_folder_name}_bm25.csv"
+        f"{results_path}/document_similarity_{content_folder_name}_{dataset_folder_name}_bm25.csv"
     )
     print(
         f"[Info] ~ Result BM25 document similarity for {content_folder_name} saved.",

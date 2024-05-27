@@ -1,7 +1,7 @@
 # Example with arguments:
-# python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
-# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_12_dossiers_no_requests.json
-# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_60_dossiers_no_requests.json
+# python evaluate_bm25.py --algorithm BM25Okapi --content_folder_name WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords --documents_directory ../docs --evaluation_directory ./evaluation --evaluation_file evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json --results_path ./evaluation/results
+# python evaluate_bm25.py --algorithm BM25Okapi --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --evaluation_directory ./evaluation --evaluation_file evaluation_request_12_dossiers_no_requests.json --results_path ./evaluation/results
+# python evaluate_bm25.py --algorithm BM25Okapi --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --evaluation_directory ./evaluation --evaluation_file evaluation_request_60_dossiers_no_requests.json --results_path ./evaluation/results
 
 import heapq
 import json
@@ -13,13 +13,12 @@ from common import evaluate_helpers
 from rank_bm25 import BM25Okapi, BM25L, BM25Plus
 
 
-def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
+def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, results_path):
     # Check if chunks are present in the data
     print(f"[Info] ~ Running algorithm: {bm25.__class__.__name__}", flush=True)
-
+    
     # Determine file paths
-    csv_file_path = f'./evaluation/results/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
-    json_file_path = f'./evaluation/results/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request_raw.json'
+    csv_file_path = f'{results_path}/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
     last_index = -1
 
     # Check if csv file exists
@@ -61,7 +60,6 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
         if index <= last_index:
             print(f"[Info] ~ Skipping index {index}", flush=True)
             continue
-        results_raw = {}
         if not value.get("pages"):
             print("[Warning] ~ No pages found in the JSON file", flush=True)
             continue
@@ -137,30 +135,33 @@ def main():
     print("[Info] ~ Successfully downloaded the NLTK resources.", flush=True)
 
     parser = ArgumentParser()
-    parser.add_argument("-a", "--algorithm", type=str)
-    parser.add_argument("-c", "--content_folder_name", type=str)
-    parser.add_argument("-d", "--documents_directory", type=str)
-    parser.add_argument("-e", "--evaluation_file", type=str)
-    parser.add_argument("-r", "--retrieve_whole_document", type=bool, default=False)
+    parser.add_argument("--algorithm", type=str)
+    parser.add_argument("--content_folder_name", type=str, required=True)
+    parser.add_argument("--documents_directory", type=str, required=True)
+    parser.add_argument("--evaluation_directory", type=str, required=True)
+    parser.add_argument("--evaluation_file", type=str, required=True)
+    parser.add_argument("--retrieve_whole_document", type=bool, default=False)
+    parser.add_argument("--results_path", type=bool, required=True)
 
     args = parser.parse_args()
-    if args.content_folder_name and args.documents_directory and args.evaluation_file:
-        content_folder_name = args.content_folder_name
-        documents_directory = args.documents_directory
-        evaluation_file = args.evaluation_file
-        retrieve_whole_document = args.retrieve_whole_document
-        if args.algorithm in ["BM25Okapi", "BM25L", "BM25Plus"]:
-            algorithm = args.algorithm
-        else:
-            algorithm = "all"
+
+    content_folder_name = args.content_folder_name
+    documents_directory = args.documents_directory
+    evaluation_directory = args.evaluation_directory
+    evaluation_file = args.evaluation_file
+    retrieve_whole_document = args.retrieve_whole_document
+    results_path = args.results_path
+    if args.algorithm in ["BM25Okapi", "BM25L", "BM25Plus"]:
+        algorithm = args.algorithm
     else:
-        raise ValueError("Please provide all arguments.")
+        algorithm = "all"
+
     print(f"[Info] ~ Source folder of documents: {content_folder_name}", flush=True)
 
     # Selecting the paths
     file_name = "woo_merged.csv.gz"
     input_path = f"{documents_directory}/{content_folder_name}/{file_name}"
-    evaluation_path = f"./evaluation/{evaluation_file}"
+    evaluation_path = f"{evaluation_directory}/{evaluation_file}"
 
     woo_data = pd.read_csv(input_path, compression="gzip")
 
@@ -194,17 +195,17 @@ def main():
     if algorithm == "BM25Okapi" or algorithm == "all":
         print("[Info] ~ Starting BM25Okapi", flush=True)
         bm25okapi = BM25Okapi(tokenized_corpus)
-        run_bm25(woo_data, bm25okapi, evaluation, evaluation_file, content_folder_name)
+        run_bm25(woo_data, bm25okapi, evaluation, evaluation_file, content_folder_name, results_path)
         print("[Info] ~ BM25Okapi done", flush=True)
     if algorithm == "BM25L" or algorithm == "all":
         print("[Info] ~ Starting BM25L", flush=True)
         bm25l = BM25L(tokenized_corpus)
-        run_bm25(woo_data, bm25l, evaluation, evaluation_file, content_folder_name)
+        run_bm25(woo_data, bm25l, evaluation, evaluation_file, content_folder_name, results_path)
         print("[Info] ~ BM25L done", flush=True)
     if algorithm == "BM25Plus" or algorithm == "all":
         print("[Info] ~ Starting BM25Plus", flush=True)
         bm25plus = BM25Plus(tokenized_corpus)
-        run_bm25(woo_data, bm25plus, evaluation, evaluation_file, content_folder_name)
+        run_bm25(woo_data, bm25plus, evaluation, evaluation_file, content_folder_name, results_path)
         print("[Info] ~ BM25Plus done", flush=True)
 
 

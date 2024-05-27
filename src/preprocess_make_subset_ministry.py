@@ -4,7 +4,7 @@
 # It will also create a complete subset of all dossiers, with the necessary columns.
 
 # Example with arguments:
-# python preprocess_make_subset_ministry.py -c WoogleDumps_01-04-2024_12817_dossiers -d ./docs -s ./docs
+# python preprocess_make_subset_ministry.py --content_folder_name WoogleDumps_01-04-2024_12817_dossiers --documents_directory ./docs --save_directory ./docs
 
 import numpy as np
 import os
@@ -110,18 +110,15 @@ def main():
     parser = ArgumentParser(
         description="Document ingestion script using the Ingester class."
     )
-    parser.add_argument("-c", "--content_folder_name", type=str)
-    parser.add_argument("-d", "--documents_directory", type=str)
-    parser.add_argument("-s", "--save_directory", type=str)
+    parser.add_argument("--content_folder_name", type=str, required=True)
+    parser.add_argument("--documents_directory", type=str, required=True)
+    parser.add_argument("--save_directory", type=str, required=True)
     args = parser.parse_args()
 
-    if args.content_folder_name and args.documents_directory:
-        content_folder_name = args.content_folder_name
-        documents_directory = args.documents_directory
-        save_directory = args.save_directory
-    else:
-        print("Not all arguments are provided")
-        exit()
+    content_folder_name = args.content_folder_name
+    documents_directory = args.documents_directory
+    save_directory = args.save_directory
+
     print(f"Source folder of documents: {content_folder_name}")
 
     file_path = f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
