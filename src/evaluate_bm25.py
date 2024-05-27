@@ -13,10 +13,12 @@ from common import evaluate_helpers
 from rank_bm25 import BM25Okapi, BM25L, BM25Plus
 
 
-def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, results_path):
+def run_bm25(
+    woo_data, bm25, evaluation, evaluation_file, content_folder_name, results_path
+):
     # Check if chunks are present in the data
     print(f"[Info] ~ Running algorithm: {bm25.__class__.__name__}", flush=True)
-    
+
     # Determine file paths
     csv_file_path = f'{results_path}/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
     last_index = -1
@@ -195,17 +197,38 @@ def main():
     if algorithm == "BM25Okapi" or algorithm == "all":
         print("[Info] ~ Starting BM25Okapi", flush=True)
         bm25okapi = BM25Okapi(tokenized_corpus)
-        run_bm25(woo_data, bm25okapi, evaluation, evaluation_file, content_folder_name, results_path)
+        run_bm25(
+            woo_data,
+            bm25okapi,
+            evaluation,
+            evaluation_file,
+            content_folder_name,
+            results_path,
+        )
         print("[Info] ~ BM25Okapi done", flush=True)
     if algorithm == "BM25L" or algorithm == "all":
         print("[Info] ~ Starting BM25L", flush=True)
         bm25l = BM25L(tokenized_corpus)
-        run_bm25(woo_data, bm25l, evaluation, evaluation_file, content_folder_name, results_path)
+        run_bm25(
+            woo_data,
+            bm25l,
+            evaluation,
+            evaluation_file,
+            content_folder_name,
+            results_path,
+        )
         print("[Info] ~ BM25L done", flush=True)
     if algorithm == "BM25Plus" or algorithm == "all":
         print("[Info] ~ Starting BM25Plus", flush=True)
         bm25plus = BM25Plus(tokenized_corpus)
-        run_bm25(woo_data, bm25plus, evaluation, evaluation_file, content_folder_name, results_path)
+        run_bm25(
+            woo_data,
+            bm25plus,
+            evaluation,
+            evaluation_file,
+            content_folder_name,
+            results_path,
+        )
         print("[Info] ~ BM25Plus done", flush=True)
 
 

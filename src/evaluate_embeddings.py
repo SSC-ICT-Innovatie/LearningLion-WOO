@@ -29,9 +29,9 @@ def main():
     parser.add_argument("--vector_db_folder", type=str, required=True)
     parser.add_argument("--results_path", type=str, required=True)
     parser.add_argument("--evaluation_directory", type=str, required=True)
-    
+
     args = parser.parse_args()
-    
+
     evaluation_file = args.evaluation_file
     embedding_author = args.embedding_author
     embedding_function = args.embedding_function

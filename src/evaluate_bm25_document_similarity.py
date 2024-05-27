@@ -22,7 +22,6 @@ def main():
     dataset_folder_name = args.dataset_folder_name
     results_path = args.results_path
 
-
     woo_data = pd.read_csv(
         f"./{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
     )
