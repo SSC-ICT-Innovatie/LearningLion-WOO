@@ -62,7 +62,7 @@ def main():
     parser.add_argument('-p', '--embedding_provider', type=str)
     parser.add_argument('-a', '--embedding_author', type=str)
     parser.add_argument('-f', '--embedding_function', type=str)
-    parser.add_argument('-c', '--collection_name', type=str)
+    parser.add_argument('-c', '--collection_name', type=str)    
     parser.add_argument('-v', '--vector_db_folder', type=str)
     
     args = parser.parse_args()

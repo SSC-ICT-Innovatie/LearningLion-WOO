@@ -2,8 +2,8 @@ import os
 import sys
 import datetime as dt
 from loguru import logger
-# from langchain_community.vectorstores.chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores.chroma import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings, HuggingFaceBgeEmbeddings
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
 # local imports
@@ -38,13 +38,21 @@ def getattr_or_default(obj, attr, default=None):
 
 
 def get_chroma_vector_store(collection_name, embeddings, vectordb_folder):
-    from custom_langchain.chroma import Chroma
+    # from custom_langchain.chroma import Chroma
+    # print("Creating Chroma vector store...")
+    # print("collection_name: ", collection_name)
+    # print("embeddings: ", embeddings)
+    # print("vectordb_folder: ", vectordb_folder)
+    # print("done creating Chroma vector store")
     vector_store = Chroma(
         collection_name=collection_name,
         embedding_function=embeddings,
         persist_directory=vectordb_folder,
         collection_metadata={"hnsw:space": "cosine"}
     )
+    print("Chroma vector store created")
+    vector_store_data = vector_store.get()
+    print("Length of vector store: ", len(vector_store_data['ids']))
     return vector_store
 
 
@@ -84,13 +92,28 @@ def getEmbeddings(embeddings_provider, embeddings_model, local_api_url, azureope
     elif embeddings_provider == "huggingface":
         embeddings = HuggingFaceEmbeddings(model_name=embeddings_model)
     elif embeddings_provider == "local_embeddings":
+        # from transformers import AutoTokenizer
+        # tokenizer = AutoTokenizer.from_pretrained(embeddings_model)
+        # if tokenizer.pad_token is None:
+        #     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         model_name = embeddings_model
         model_kwargs = {'device': 'cpu'}
         encode_kwargs = {'normalize_embeddings': False}
-        embeddings = HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs=model_kwargs,
-            encode_kwargs=encode_kwargs )
+        if embeddings_model == "meta-llama/Meta-Llama-3-8B-Instruct":
+            embeddings = HuggingFaceEmbeddings(
+                model_name=model_name,
+                model_kwargs=model_kwargs,
+                encode_kwargs=encode_kwargs
+            )
+            # Set the padding token
+            tokenizer = embeddings.client.tokenizer
+            tokenizer.pad_token = tokenizer.eos_token
+        else: 
+            embeddings = HuggingFaceEmbeddings(
+                model_name=model_name,
+                model_kwargs=model_kwargs,
+                encode_kwargs=encode_kwargs
+            )
         logger.info("Loaded local embeddings: " + embeddings_model)
     elif embeddings_provider == "azureopenai":
         logger.info("Retrieve " + embeddings_model)

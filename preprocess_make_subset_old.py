@@ -56,17 +56,6 @@ def intersection_of_tuples(list1, list2):
     # Convert the set back to a list of tuples
     return list(intersection_set)
 
-def left_join_of_tuples(list1, list2):
-    # Convert lists of tuples to sets
-    set1 = set(list1)
-    set2 = set(list2)
-
-    # Find left join
-    left_join_set = set1 - set2
-
-    # Convert the set back to a list of tuples
-    return list(left_join_set)
-
 def make_unique_tuple(tuple_list):
     id_list = []
     unique_list = []
@@ -116,16 +105,10 @@ def main():
     filtered_df_attachment = woo_data[(woo_data['dossiers_dc_publisher_name'].str.contains("Ministerie", case=False)) & (woo_data['documents_dc_type'] == "bijlage")]
     dossier_ids_with_publishers_attachment = list(zip(filtered_df_attachment['foi_dossierId'], filtered_df_attachment['dossiers_dc_publisher_name']))
     dossier_tuple_attachment = make_unique_tuple(dossier_ids_with_publishers_attachment)
-    
-    # Make a full tuple of all dossiers
-    full_dossier_ids = list(zip(filtered_df_attachment['foi_dossierId'], filtered_df_attachment['dossiers_dc_publisher_name']))
-    full_tuple = make_unique_tuple(full_dossier_ids)
 
     # Get the intersection of the two sets
     unique_foi_dossier_ids = intersection_of_tuples(dossier_tuple_request, dossier_tuple_attachment)
     unique_foi_dossier_ids
-    
-    full_tuple_left_join = left_join_of_tuples(full_tuple, unique_foi_dossier_ids)
 
     ministries = [
         "ministerie van landbouw, natuur en voedselkwaliteit",
@@ -142,15 +125,13 @@ def main():
         "ministerie van algemene zaken"
     ]
 
-    number_of_dossiers = [1, 5]
+    number_of_dossiers = [1, 5, 20]
     for i in number_of_dossiers:
         result = pd.DataFrame()
         result_no_requests = pd.DataFrame()
         nr_of_dossiers = 0
         for ministry in ministries:
-            dossiers = get_first_n_dossiers_by_ministry(unique_foi_dossier_ids, 1, ministry)
-            if i == 5:
-                dossiers += get_first_n_dossiers_by_ministry(full_tuple_left_join, 4, ministry)
+            dossiers = get_first_n_dossiers_by_ministry(unique_foi_dossier_ids, i, ministry)
             nr_of_dossiers += len(dossiers)
             # Filter the DataFrame for the dossiers
             woo_data_filtered = filtered_df[filtered_df['foi_dossierId'].isin(dossiers)]
@@ -167,20 +148,6 @@ def main():
         
         result.to_csv(f"{result_dir}/woo_merged.csv.gz", index=False, compression='gzip')
         result_no_requests.to_csv(f"{result_no_requests_dir}/woo_merged.csv.gz", index=False, compression='gzip')
-        
-    # Now make the complete subset with the relevant columns
-    result = keep_relevant_columns(woo_data)
-    result_no_requests = keep_relevant_columns(woo_data[woo_data['documents_dc_type'] != "verzoek"])
-    
-    result_dir = f"{save_directory}/all_dossiers"
-    result_no_requests_dir = f"{save_directory}/all_dossiers_no_requests"
-    
-    os.makedirs(result_dir, exist_ok=True)
-    os.makedirs(result_no_requests_dir, exist_ok=True)
-    
-    result.to_csv(f"{result_dir}/woo_merged.csv.gz", index=False, compression='gzip')
-    result.to_csv(f"{result_no_requests_dir}/woo_merged.csv.gz", index=False, compression='gzip')
-    print("Complete subset created.")
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,7 @@
 # Example with arguments:
 # python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
 # python evaluate_bm25.py -c 12_dossiers_no_requests -d ../docs_ministries -e evaluation_request_Ministries_12_dossiers_no_requests.json
-
+# python evaluate_bm25.py -c 12_dossiers_no_requests -d /scratch/nju/docs -e evaluation_request_Ministries_12_dossiers_no_requests_keywords.json
 import heapq
 import json
 import nltk
@@ -105,7 +105,9 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
         n_documents = len(value['documents'])
         n_dossiers = len(value['dossier'])
 
-        tokenized_query = preprocess_text(key)
+        # tokenized_query = preprocess_text(key)
+        tokenized_query = tokenize(key)
+        
         doc_scores = bm25.get_scores(tokenized_query)
         
         print(doc_scores)

@@ -89,7 +89,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, c
     print(f"Number of dossiers in evaluation: {len(dossier_identifiers)}", flush=True)
     
     # Determine file paths
-    csv_file_path = f'../evaluation/results/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
+    csv_file_path = f'../evaluation/results/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.xlsx'
     last_index = -1
     
     # Check if csv file exists
@@ -100,7 +100,13 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, c
     columns = ['#Retrieved', '#Relevant Documents', '#Relevant Documents Retrieved', '#Relevant Dossiers', '#Relevant Dossiers Retrieved', 'Precision Document', 'Recall Document', 'Precision Dossier', 'Recall Dossier']
     
     # TODO, read the csv file if it already exists
-    df = pd.DataFrame(0, index=range(len(document_identifiers)), columns=[columns])
+    # Initialize an empty list to store the DataFrames
+    dfs = []
+
+    # Loop to create n DataFrames
+    for _ in range(len(dossier_identifiers)):
+        df = pd.DataFrame(0,  index=range(len(document_identifiers)), columns=columns)
+        dfs.append(df)
     
     for index, (key, value) in enumerate(evaluation.items()):
         if index <= last_index:
@@ -135,27 +141,31 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, c
                 check_relevance(set(value['dossier']), set(dossiers_result))
             ]
             for col in [2, 4]:
-                df.loc[i, columns[col]] = df.loc[i, columns[col]] + values_to_add[int(col / 2) - 1]
+                dfs[index].loc[i, columns[col]] = values_to_add[int(col / 2) - 1]
 
         
-    # Set the columns that are already known
-    df.loc[:, columns[0]] = range(1, len(document_identifiers)+1)
-    df.loc[:, columns[1]] = len(document_identifiers)
-    df.loc[:, columns[3]] = len(dossier_identifiers)
-    
-    # Set precision and recall
-    TP_document = df.loc[:, columns[2]].to_numpy().flatten()
-    FP_document = df.loc[:, columns[0]].to_numpy().flatten() * len(document_identifiers) - TP_document
-    FN_document = df.loc[:, columns[1]].to_numpy().flatten() - TP_document
-    TP_dossier = df.loc[:, columns[4]].to_numpy().flatten()
-    FP_dossier = df.loc[:, columns[0]].to_numpy().flatten() * len(dossier_identifiers) - TP_dossier
-    FN_dossier = df.loc[:, columns[3]].to_numpy().flatten() - TP_dossier
+        # Set the columns that are already known
+        dfs[index].loc[:, columns[0]] = range(1, len(document_identifiers)+1)
+        dfs[index].loc[:, columns[1]] = len(value.get('documents'))
+        dfs[index].loc[:, columns[3]] = len(value.get('dossier'))
+        
+        # Set precision and recall
+        TP_document = dfs[index].loc[:, columns[2]].to_numpy().flatten()
+        FP_document = dfs[index].loc[:, columns[0]].to_numpy().flatten() - TP_document
+        FN_document = dfs[index].loc[:, columns[1]].to_numpy().flatten() - TP_document
+        TP_dossier = dfs[index].loc[:, columns[4]].to_numpy().flatten()
+        FP_dossier = dfs[index].loc[:, columns[0]].to_numpy().flatten() - TP_dossier
+        FN_dossier = dfs[index].loc[:, columns[3]].to_numpy().flatten() - TP_dossier
 
-    df.loc[:, columns[5]] = TP_document / (TP_document + FP_document)
-    df.loc[:, columns[6]] = TP_document / (TP_document + FN_document)
-    df.loc[:, columns[7]] = TP_dossier / (TP_dossier + FP_dossier)
-    df.loc[:, columns[8]] = TP_dossier / (TP_dossier + FN_dossier)
-    df.to_csv(csv_file_path, index=False, lineterminator='\n', mode='w')
+        dfs[index].loc[:, columns[5]] = TP_document / (TP_document + FP_document)
+        dfs[index].loc[:, columns[6]] = TP_document / (TP_document + FN_document)
+        dfs[index].loc[:, columns[7]] = TP_dossier / (TP_dossier + FP_dossier)
+        dfs[index].loc[:, columns[8]] = TP_dossier / (TP_dossier + FN_dossier)
+    
+        # Using ExcelWriter to write multiple sheets
+    with pd.ExcelWriter(csv_file_path, engine='openpyxl') as writer:
+        for index, df in enumerate(dfs):
+            df.to_excel(writer, sheet_name=f'Sheet{index+1}', index=False)
 
         # if csv_writer is None:
         #     csv_writer = pd.DataFrame(columns=columns)
