@@ -1,58 +1,21 @@
 # Example with arguments:
-# python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ./docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
+# python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
 # python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_12_dossiers_no_requests.json
 # python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_60_dossiers_no_requests.json
+
 import heapq
 import json
 import nltk
 import os
 import pandas as pd
-import re
 from argparse import ArgumentParser
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.tokenize import word_tokenize
+from common import evaluate_helpers
 from rank_bm25 import BM25Okapi, BM25L, BM25Plus
-
-
-def preprocess_text(
-    text: str, index: int = 0, print_progress: bool = True, print_freq: int = 100
-) -> list[str]:
-    if print_progress and index and index % print_freq == 0:
-        print(f"Processing document {index}", flush=True)
-
-    # Initialize stop words and stemmer
-    stop_words = set(stopwords.words("dutch"))
-    stemmer = PorterStemmer()
-
-    # Remove punctuation
-    text = re.sub(r"[^\w\s]", "", text)
-    # Remove unnecessary whitespaces
-    text = re.sub(r"\s+", " ", text).strip()
-
-    # Tokenize
-    tokens = word_tokenize(text)
-
-    # Remove stop words and stem
-    return [stemmer.stem(word) for word in tokens if word not in stop_words]
-
-
-def tokenize(text) -> list[str]:
-    # Check if text is of type string
-    if not isinstance(text, str):
-        return []
-    # Tokenize the text
-    return word_tokenize(text)
-
-
-def check_relevance(ground_truth, retrieved) -> int:
-    # Check if the retrieved documents are relevant
-    return len(retrieved.intersection(ground_truth))
 
 
 def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
     # Check if chunks are present in the data
-    print(f"Running algorithm: {bm25.__class__.__name__}", flush=True)
+    print(f"[Info] ~ Running algorithm: {bm25.__class__.__name__}", flush=True)
 
     # Determine file paths
     csv_file_path = f'./evaluation/results/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
@@ -63,129 +26,107 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
     csv_file_exists = os.path.exists(csv_file_path)
     csv_file = open(csv_file_path, "a")
     csv_writer = None
-
-    # Check if JSON file exists
-    json_file_exists = os.path.exists(json_file_path)
-    if not json_file_exists:
-        json_file = open(json_file_path, "w")
-        json_file.write("[]")
-    else:
-        with open(json_file_path) as f:
-            json_file = json.load(f)
-            # Initialize a variable to keep track of the highest key
-            highest_key = -1
-            # Iterate over each dictionary in the list
-            for item in json_file:
-                if isinstance(item, dict):
-                    current_keys = [int(key) for key in item.keys()]
-                    if current_keys:
-                        highest_key = max(highest_key, max(current_keys))
-            if highest_key == -1:
-                print("Error: The JSON file is empty, no keys to convert.", flush=True)
-                exit()
-
-            # Find a key to attempt to convert to integer (assuming there is at least one key)
-            if highest_key:
-                last_index = highest_key
-                print(f"Starting with index: {last_index}", flush=True)
-            else:
-                print(
-                    "Error: The last dictionary is empty, no keys to convert.",
-                    flush=True,
-                )
-                exit()
+    result = pd.DataFrame(
+        columns=[
+            "page_id",
+            "dossier_id",
+            "retrieved_page_ids",
+            "retrieved_dossier_ids",
+            "scores",
+            "number_of_correct_dossiers",
+            "dossier#1",
+            "dossier#2",
+            "dossier#3",
+            "dossier#4",
+            "dossier#5",
+            "dossier#6",
+            "dossier#7",
+            "dossier#8",
+            "dossier#9",
+            "dossier#10",
+            "dossier#11",
+            "dossier#12",
+            "dossier#13",
+            "dossier#14",
+            "dossier#15",
+            "dossier#16",
+            "dossier#17",
+            "dossier#18",
+            "dossier#19",
+            "dossier#20",
+        ]
+    )
 
     for index, (key, value) in enumerate(evaluation.items()):
         if index <= last_index:
-            print(f"Skipping index {index}", flush=True)
+            print(f"[Info] ~ Skipping index {index}", flush=True)
             continue
         results_raw = {}
         if not value.get("pages"):
-            print("No pages found in the JSON file", flush=True)
+            print("[Warning] ~ No pages found in the JSON file", flush=True)
             continue
         if not value.get("documents"):
-            print("No documents found in the JSON file", flush=True)
+            print("[Warning] ~ No documents found in the JSON file", flush=True)
             continue
         if not value.get("dossier"):
-            print("No dossiers found in the JSON file", flush=True)
+            print("[Warning] ~ No dossiers found in the JSON file", flush=True)
             continue
 
-        n_pages = len(value["pages"])
-        n_documents = len(value["documents"])
-        n_dossiers = len(value["dossier"])
-
-        # tokenized_query = preprocess_text(key)
-        tokenized_query = tokenize(key)
+        # tokenized_query = evaluate_helpers.preprocess_text(key)
+        tokenized_query = evaluate_helpers.tokenize(key)
 
         doc_scores = bm25.get_scores(tokenized_query)
 
-        print(doc_scores)
-
-        # Assuming n_pages >= n_documents >= n_dossiers
         n_pages_result = heapq.nlargest(
-            n_pages, range(len(doc_scores)), key=doc_scores.__getitem__
+            20, range(len(doc_scores)), key=doc_scores.__getitem__
         )
-        n_documents_result = n_pages_result[:n_documents]
-        n_dossiers_result = n_pages_result[:n_dossiers]
-
-        # chunks_result = [woo_data['chunk_id'][i] for i in n_pages_result] if evaluate_chunks else None
-        pages_result = [woo_data["page_id"][i] for i in n_pages_result]
-        documents_result = [woo_data["document_id"][i] for i in n_documents_result]
-        dossiers_result = [woo_data["dossier_id"][i] for i in n_dossiers_result]
-
-        results_raw[index] = {
-            "bodyText": key,
-            # 'chunks': chunks_result,
-            "pages": pages_result,
-            "documents": documents_result,
-            "dossier": dossiers_result,
-        }
+        retrieved_page_ids = []
+        retrieved_dossier_ids = []
+        # scores = []
+        for i in n_pages_result:
+            retrieved_page_ids.append(woo_data["page_id"][i])
+            retrieved_dossier_ids.append(woo_data["dossier_id"][i])
 
         # Collect top documents and their scores for the current BM25 algorithm
-        new_row = [
-            len(value["pages"]),  # Relevant Pages
-            check_relevance(
-                set(value["pages"]), set(pages_result)
-            ),  # Relevant Pages Retrieved
-            len(value["documents"]),  # Relevant Documents
-            check_relevance(
-                set(value["documents"]), set(documents_result)
-            ),  # Relevant Documents Retrieved
-            len(value["dossier"]),  # Relevant Dossiers
-            check_relevance(
-                set(value["dossier"]), set(dossiers_result)
-            ),  # Relevant Dossiers Retrieved
-        ]
+        new_row = {
+            "page_id": "N/A",
+            "dossier_id": value["dossier"][0],
+            "retrieved_page_ids": ", ".join(retrieved_page_ids),
+            "retrieved_dossier_ids": ", ".join(retrieved_dossier_ids),
+            "scores": "",
+            "number_of_correct_dossiers": retrieved_dossier_ids.count(
+                value["dossier"][0]
+            ),
+            "dossier#1": retrieved_dossier_ids[0] == value["dossier"][0],
+            "dossier#2": retrieved_dossier_ids[1] == value["dossier"][0],
+            "dossier#3": retrieved_dossier_ids[2] == value["dossier"][0],
+            "dossier#4": retrieved_dossier_ids[3] == value["dossier"][0],
+            "dossier#5": retrieved_dossier_ids[4] == value["dossier"][0],
+            "dossier#6": retrieved_dossier_ids[5] == value["dossier"][0],
+            "dossier#7": retrieved_dossier_ids[6] == value["dossier"][0],
+            "dossier#8": retrieved_dossier_ids[7] == value["dossier"][0],
+            "dossier#9": retrieved_dossier_ids[8] == value["dossier"][0],
+            "dossier#10": retrieved_dossier_ids[9] == value["dossier"][0],
+            "dossier#11": retrieved_dossier_ids[10] == value["dossier"][0],
+            "dossier#12": retrieved_dossier_ids[11] == value["dossier"][0],
+            "dossier#13": retrieved_dossier_ids[12] == value["dossier"][0],
+            "dossier#14": retrieved_dossier_ids[13] == value["dossier"][0],
+            "dossier#15": retrieved_dossier_ids[14] == value["dossier"][0],
+            "dossier#16": retrieved_dossier_ids[15] == value["dossier"][0],
+            "dossier#17": retrieved_dossier_ids[16] == value["dossier"][0],
+            "dossier#18": retrieved_dossier_ids[17] == value["dossier"][0],
+            "dossier#19": retrieved_dossier_ids[18] == value["dossier"][0],
+            "dossier#20": retrieved_dossier_ids[19] == value["dossier"][0],
+        }
 
-        if csv_writer is None:
-            fieldnames = [
-                "#Relevant Pages",
-                "#Relevant Pages Retrieved",
-                "#Relevant Documents",
-                "#Relevant Documents Retrieved",
-                "#Relevant Dossiers",
-                "#Relevant Dossiers Retrieved",
-            ]
-            csv_writer = pd.DataFrame(columns=fieldnames)
-        if not csv_file_exists:
-            csv_writer.to_csv(csv_file, index=False, lineterminator="\n")
-            csv_file_exists = True  # Prevent header repetition
-        csv_writer.loc[len(csv_writer.index)] = new_row
-        csv_writer.loc[len(csv_writer.index) - 1 : len(csv_writer.index) - 1].to_csv(
-            csv_file, header=False, index=False, lineterminator="\n"
-        )
-        csv_file.flush()  # Ensure that the data is written to the file in the DHPC environment
-        print(f"Index {index} in csv file written.", flush=True)
+        # Append the new value to the DataFrame
+        # result.append(new_row, ignore_index=True)
+        result.loc[len(result)] = new_row
 
-        # Append or create JSON file
-        with open(json_file_path) as json_file:
-            all_results_raw = json.load(json_file)
-            all_results_raw.append(results_raw)
-        with open(json_file_path, "w") as json_file:
-            json.dump(all_results_raw, json_file)
-        print(f"Index {index} in json file written.", flush=True)
-
-    csv_file.close()
+    loc = f'{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
+    result_path = f"./evaluation/results/{loc}"
+    result.to_csv(result_path)
+    print(f"[Info] ~ Results written to {result_path}")
 
 
 def main():
@@ -193,7 +134,7 @@ def main():
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
 
-    print("Successfully downloaded the NLTK resources.", flush=True)
+    print("[Info] ~ Successfully downloaded the NLTK resources.", flush=True)
 
     parser = ArgumentParser()
     parser.add_argument("-a", "--algorithm", type=str)
@@ -213,12 +154,8 @@ def main():
         else:
             algorithm = "all"
     else:
-        print(
-            "Please provide the source folder of documents, the output folder name, and the database directory.",
-            flush=True,
-        )
-        exit()
-    print(f"Source folder of documents: {content_folder_name}", flush=True)
+        raise ValueError("Please provide all arguments.")
+    print(f"[Info] ~ Source folder of documents: {content_folder_name}", flush=True)
 
     # Selecting the paths
     file_name = "woo_merged.csv.gz"
@@ -227,7 +164,7 @@ def main():
 
     woo_data = pd.read_csv(input_path, compression="gzip")
 
-    # Preprocess woo data, merge all the documents into one entry
+    # Preprocess woo data, merge all the pages into one document, instead of seperately
     if retrieve_whole_document:
         woo_data = (
             woo_data.groupby("document_id")
@@ -244,33 +181,32 @@ def main():
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
 
-    print(f"Number of documents in corpus: {len(corpus)}", flush=True)
+    print(f"[Info] ~ Number of documents in corpus: {len(corpus)}", flush=True)
 
     # Do preprocessing for echt document
-    tokenized_corpus = [tokenize(doc) for doc in corpus]
+    tokenized_corpus = [evaluate_helpers.preprocess_text(doc) for doc in corpus]
 
     with open(evaluation_path, "r") as file:
         evaluation = json.load(file)
 
-    print(f"Number of documents in evaluation: {len(evaluation)}", flush=True)
+    print(f"[Info] ~ Number of documents in evaluation: {len(evaluation)}", flush=True)
 
     if algorithm == "BM25Okapi" or algorithm == "all":
-        print("Starting BM25Okapi", flush=True)
+        print("[Info] ~ Starting BM25Okapi", flush=True)
         bm25okapi = BM25Okapi(tokenized_corpus)
         run_bm25(woo_data, bm25okapi, evaluation, evaluation_file, content_folder_name)
-        print("BM25Okapi done", flush=True)
+        print("[Info] ~ BM25Okapi done", flush=True)
     if algorithm == "BM25L" or algorithm == "all":
-        print("Starting BM25L", flush=True)
+        print("[Info] ~ Starting BM25L", flush=True)
         bm25l = BM25L(tokenized_corpus)
         run_bm25(woo_data, bm25l, evaluation, evaluation_file, content_folder_name)
-        print("BM25L done", flush=True)
+        print("[Info] ~ BM25L done", flush=True)
     if algorithm == "BM25Plus" or algorithm == "all":
-        print("Starting BM25Plus", flush=True)
+        print("[Info] ~ Starting BM25Plus", flush=True)
         bm25plus = BM25Plus(tokenized_corpus)
         run_bm25(woo_data, bm25plus, evaluation, evaluation_file, content_folder_name)
-        print("BM25Plus done", flush=True)
+        print("[Info] ~ BM25Plus done", flush=True)
 
 
 if __name__ == "__main__":
-    print("Starting the program...", flush=True)
     main()
