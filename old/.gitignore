@@ -164,3 +164,8 @@ test.ipynb
 
 # Generated evaluation files
 /evaluation
+
+*.ipynb
+*.csv.gz
+*.sh
+*.gguf
