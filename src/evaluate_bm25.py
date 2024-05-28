@@ -3,6 +3,7 @@
 # python evaluate_bm25.py --algorithm BM25Okapi --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --evaluation_directory ./evaluation --evaluation_file evaluation_request_12_dossiers_no_requests.json --results_path ./evaluation/results
 # python evaluate_bm25.py --algorithm BM25Okapi --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --evaluation_directory ./evaluation --evaluation_file evaluation_request_60_dossiers_no_requests.json --results_path ./evaluation/results
 
+import csv
 import heapq
 import json
 import nltk
@@ -19,14 +20,34 @@ def run_bm25(
     # Check if chunks are present in the data
     print(f"[Info] ~ Running algorithm: {bm25.__class__.__name__}", flush=True)
 
-    # Determine file paths
+    # Determine file paths and check existence
     csv_file_path = f'{results_path}/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
     last_index = -1
 
-    # Check if csv file exists
-    csv_file_exists = os.path.exists(csv_file_path)
-    csv_file = open(csv_file_path, "a")
-    csv_writer = None
+    # If the file exists, determine the last index processed
+    if os.path.exists(csv_file_path):
+        with open(csv_file_path, "r") as file:
+            reader = csv.reader(file)
+            last_index = sum(1 for row in reader)
+
+    # Open CSV file for appending or writing
+    csv_file = open(csv_file_path, "a", newline="")
+    csv_writer = csv.writer(csv_file)
+
+    # Write header if the file is new
+    if last_index == -1:
+        csv_writer.writerow(
+            [
+                "page_id",
+                "dossier_id",
+                "retrieved_page_ids",
+                "retrieved_dossier_ids",
+                "scores",
+                "number_of_correct_dossiers",
+                *(f"dossier#{i+1}" for i in range(20)),
+            ]
+        )
+
     result = pd.DataFrame(
         columns=[
             "page_id",
@@ -123,10 +144,18 @@ def run_bm25(
         # result.append(new_row, ignore_index=True)
         result.loc[len(result)] = new_row
 
-    loc = f'{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
-    result_path = f"./evaluation/results/{loc}"
-    result.to_csv(result_path)
-    print(f"[Info] ~ Results written to {result_path}")
+        csv_writer.writerow(
+            [
+                "N/A",
+                value["dossier"][0],
+                ", ".join(retrieved_page_ids),
+                ", ".join(retrieved_dossier_ids),
+                "",
+                retrieved_dossier_ids.count(value["dossier"][0]),
+                *(retrieved_dossier_ids[i] == value["dossier"][0] for i in range(20)),
+            ]
+        )
+        print(f"[Info] ~ Results written on index: {index}.")
 
 
 def main():
@@ -143,7 +172,7 @@ def main():
     parser.add_argument("--evaluation_directory", type=str, required=True)
     parser.add_argument("--evaluation_file", type=str, required=True)
     parser.add_argument("--retrieve_whole_document", type=bool, default=False)
-    parser.add_argument("--results_path", type=bool, required=True)
+    parser.add_argument("--results_path", type=str, required=True)
 
     args = parser.parse_args()
 
