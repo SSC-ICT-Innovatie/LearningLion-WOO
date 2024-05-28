@@ -14,9 +14,7 @@ from common import evaluate_helpers
 from rank_bm25 import BM25Okapi, BM25L, BM25Plus
 
 
-def run_bm25(
-    woo_data, bm25, evaluation, evaluation_file, content_folder_name, results_path
-):
+def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, results_path):
     # Check if chunks are present in the data
     print(f"[Info] ~ Running algorithm: {bm25.__class__.__name__}", flush=True)
 
@@ -98,9 +96,7 @@ def run_bm25(
 
         doc_scores = bm25.get_scores(tokenized_query)
 
-        n_pages_result = heapq.nlargest(
-            20, range(len(doc_scores)), key=doc_scores.__getitem__
-        )
+        n_pages_result = heapq.nlargest(20, range(len(doc_scores)), key=doc_scores.__getitem__)
         retrieved_page_ids = []
         retrieved_dossier_ids = []
         # scores = []
@@ -115,9 +111,7 @@ def run_bm25(
             "retrieved_page_ids": ", ".join(retrieved_page_ids),
             "retrieved_dossier_ids": ", ".join(retrieved_dossier_ids),
             "scores": "",
-            "number_of_correct_dossiers": retrieved_dossier_ids.count(
-                value["dossier"][0]
-            ),
+            "number_of_correct_dossiers": retrieved_dossier_ids.count(value["dossier"][0]),
             "dossier#1": retrieved_dossier_ids[0] == value["dossier"][0],
             "dossier#2": retrieved_dossier_ids[1] == value["dossier"][0],
             "dossier#3": retrieved_dossier_ids[2] == value["dossier"][0],

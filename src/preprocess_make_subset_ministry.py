@@ -18,8 +18,7 @@ def keep_relevant_columns(df):
 
     # Use .loc to ensure that changes are made directly in the copied DataFrame
     df.loc[:, "all_foi_bodyText"] = np.where(
-        df["bodytext_foi_bodyTextOCR"].notnull()
-        & df["bodytext_foi_bodyTextOCR"].str.strip().ne(""),
+        df["bodytext_foi_bodyTextOCR"].notnull() & df["bodytext_foi_bodyTextOCR"].str.strip().ne(""),
         df["bodytext_foi_bodyTextOCR"],
         df["bodytext_foi_bodyText"],
     )
@@ -54,11 +53,7 @@ def keep_relevant_columns(df):
 
 def get_first_n_dossiers_by_ministry(tuples, n, ministry, closest_nr_docs=20):
     # Filter tuples by the specified ministry and calculate the difference from 20
-    filtered_and_diff = [
-        (dossier_id, abs(num - closest_nr_docs))
-        for dossier_id, dossier_ministry, num in tuples
-        if dossier_ministry.lower() == ministry.lower()
-    ]
+    filtered_and_diff = [(dossier_id, abs(num - closest_nr_docs)) for dossier_id, dossier_ministry, num in tuples if dossier_ministry.lower() == ministry.lower()]
 
     # Sort by the difference (second element in the tuple)
     sorted_by_closest = sorted(filtered_and_diff, key=lambda x: x[1])
@@ -67,9 +62,7 @@ def get_first_n_dossiers_by_ministry(tuples, n, ministry, closest_nr_docs=20):
     results = [dossier_id for dossier_id, diff in sorted_by_closest[:n]]
 
     if len(results) < n:
-        print(
-            f"[Warning] ~ Only {len(results)} dossiers found for {ministry}, with n={n}."
-        )
+        print(f"[Warning] ~ Only {len(results)} dossiers found for {ministry}, with n={n}.")
 
     return results
 
@@ -107,9 +100,7 @@ def intersection_of_tuples(list1, list2):
 
 
 def main():
-    parser = ArgumentParser(
-        description="Document ingestion script using the Ingester class."
-    )
+    parser = ArgumentParser(description="Document ingestion script using the Ingester class.")
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
     parser.add_argument("--save_directory", type=str, required=True)
@@ -124,14 +115,9 @@ def main():
     file_path = f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
     woo_data = pd.read_csv(file_path, compression="gzip")
 
-    filtered_df = woo_data[
-        woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)
-    ]
+    filtered_df = woo_data[woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)]
     # Get all dossiers that are from ministries and have a request file
-    filtered_df_request = woo_data[
-        (woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False))
-        & (woo_data["documents_dc_type"] == "verzoek")
-    ]
+    filtered_df_request = woo_data[(woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)) & (woo_data["documents_dc_type"] == "verzoek")]
     dossier_ids_with_publishers_request = list(
         zip(
             filtered_df_request["foi_dossierId"],
@@ -141,10 +127,7 @@ def main():
     dossier_tuple_request = make_unique_tuple(dossier_ids_with_publishers_request)
 
     # Get all dossiers that are from ministries and have an attachment file
-    filtered_df_attachment = woo_data[
-        (woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False))
-        & (woo_data["documents_dc_type"] == "bijlage")
-    ]
+    filtered_df_attachment = woo_data[(woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)) & (woo_data["documents_dc_type"] == "bijlage")]
     dossier_ids_with_publishers_attachment = list(
         zip(
             filtered_df_attachment["foi_dossierId"],
@@ -163,9 +146,7 @@ def main():
     full_tuple = make_unique_tuple(full_dossier_ids)
 
     # Get the intersection of the two sets, with the number of attachments as quantity number
-    unique_foi_dossier_ids = intersection_of_tuples(
-        dossier_tuple_attachment, dossier_tuple_request
-    )
+    unique_foi_dossier_ids = intersection_of_tuples(dossier_tuple_attachment, dossier_tuple_request)
 
     ministries = [
         "ministerie van landbouw, natuur en voedselkwaliteit",
@@ -188,14 +169,10 @@ def main():
         result_no_requests = pd.DataFrame()
         nr_of_dossiers = 0
         for ministry in ministries:
-            dossiers = get_first_n_dossiers_by_ministry(
-                unique_foi_dossier_ids, 1, ministry
-            )
+            dossiers = get_first_n_dossiers_by_ministry(unique_foi_dossier_ids, 1, ministry)
 
             if i == 5:
-                temp_dossiers = get_first_n_dossiers_by_ministry(
-                    full_tuple, 5, ministry
-                )
+                temp_dossiers = get_first_n_dossiers_by_ministry(full_tuple, 5, ministry)
                 for j in temp_dossiers:
                     if j not in dossiers:
                         dossiers.append(j)
@@ -205,13 +182,9 @@ def main():
             nr_of_dossiers += len(dossiers)
             # Filter the DataFrame for the dossiers
             woo_data_filtered = filtered_df[filtered_df["foi_dossierId"].isin(dossiers)]
-            woo_data_filtered_no_requests = woo_data_filtered[
-                woo_data_filtered["documents_dc_type"] != "verzoek"
-            ]
+            woo_data_filtered_no_requests = woo_data_filtered[woo_data_filtered["documents_dc_type"] != "verzoek"]
 
-            result = pd.concat(
-                [result, keep_relevant_columns(woo_data_filtered)], ignore_index=True
-            )
+            result = pd.concat([result, keep_relevant_columns(woo_data_filtered)], ignore_index=True)
             result_no_requests = pd.concat(
                 [
                     result_no_requests,
@@ -226,9 +199,7 @@ def main():
         os.makedirs(result_dir, exist_ok=True)
         os.makedirs(result_no_requests_dir, exist_ok=True)
 
-        result.to_csv(
-            f"{result_dir}/woo_merged.csv.gz", index=False, compression="gzip"
-        )
+        result.to_csv(f"{result_dir}/woo_merged.csv.gz", index=False, compression="gzip")
         result_no_requests.to_csv(
             f"{result_no_requests_dir}/woo_merged.csv.gz",
             index=False,
@@ -237,9 +208,7 @@ def main():
 
     # Now make the complete subset with the relevant columns
     result = keep_relevant_columns(woo_data)
-    result_no_requests = keep_relevant_columns(
-        woo_data[woo_data["documents_dc_type"] != "verzoek"]
-    )
+    result_no_requests = keep_relevant_columns(woo_data[woo_data["documents_dc_type"] != "verzoek"])
 
     result_dir = f"{save_directory}/all_dossiers"
     result_no_requests_dir = f"{save_directory}/all_dossiers_no_requests"
@@ -248,9 +217,7 @@ def main():
     os.makedirs(result_no_requests_dir, exist_ok=True)
 
     result.to_csv(f"{result_dir}/woo_merged.csv.gz", index=False, compression="gzip")
-    result.to_csv(
-        f"{result_no_requests_dir}/woo_merged.csv.gz", index=False, compression="gzip"
-    )
+    result.to_csv(f"{result_no_requests_dir}/woo_merged.csv.gz", index=False, compression="gzip")
     print("[Info] ~ Subsets of ministries created.")
 
 

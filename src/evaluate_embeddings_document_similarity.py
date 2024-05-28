@@ -79,9 +79,7 @@ def main():
         ]
     )
     # First create ground truth
-    woo_data = pd.read_csv(
-        f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
-    )
+    woo_data = pd.read_csv(f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz")
     for _, row in woo_data.iterrows():
         if pd.isna(row["bodyText"]):
             continue
@@ -111,9 +109,7 @@ def main():
             "retrieved_page_ids": ", ".join(retrieved_page_ids),
             "retrieved_dossier_ids": ", ".join(retrieved_dossier_ids),
             "scores": ", ".join(scores),
-            "number_of_correct_dossiers": retrieved_dossier_ids.count(
-                row["dossier_id"]
-            ),
+            "number_of_correct_dossiers": retrieved_dossier_ids.count(row["dossier_id"]),
             "dossier#1": retrieved_dossier_ids[0] == row["dossier_id"],
             "dossier#2": retrieved_dossier_ids[1] == row["dossier_id"],
             "dossier#3": retrieved_dossier_ids[2] == row["dossier_id"],
@@ -139,9 +135,7 @@ def main():
         # Append the new row to the DataFrame
         result.loc[len(result)] = new_row
 
-    result.to_csv(
-        f"{results_path}/document_similarity_{content_folder_name}_{collection_name}_{embedding_function}.csv"
-    )
+    result.to_csv(f"{results_path}/document_similarity_{content_folder_name}_{collection_name}_{embedding_function}.csv")
     print(
         f"[Info] ~ Result embeddings document similarity for {content_folder_name} with {embedding_function} saved.",
         flush=True,

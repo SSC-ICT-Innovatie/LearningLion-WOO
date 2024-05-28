@@ -23,10 +23,7 @@ def getEmbeddings(embeddings_provider: str, embeddings_model_name: str) -> Embed
             encode_kwargs=encode_kwargs,
         )
 
-        if (
-            embeddings_model_name == "meta-llama/Meta-Llama-3-8B-Instruct"
-            or embeddings_model_name == "meta-llama/Meta-Llama-3-8B"
-        ):
+        if embeddings_model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or embeddings_model_name == "meta-llama/Meta-Llama-3-8B":
             # Llama3 needs a padding token for the tokenizer.
             # More info: https://www.reddit.com/r/LangChain/comments/16m1nee/comment/kxw4bfb/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
             tokenizer = embeddings.client.tokenizer

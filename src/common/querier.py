@@ -38,44 +38,21 @@ class Querier:
     ):
         load_dotenv()
         self.llm_type = settings.LLM_TYPE if llm_type is None else llm_type
-        self.llm_model_type = (
-            settings.LLM_MODEL_TYPE if llm_model_type is None else llm_model_type
-        )
-        self.embeddings_provider = (
-            settings.EMBEDDINGS_PROVIDER
-            if embeddings_provider is None
-            else embeddings_provider
-        )
-        self.embeddings_model = (
-            settings.EMBEDDINGS_MODEL if embeddings_model is None else embeddings_model
-        )
+        self.llm_model_type = settings.LLM_MODEL_TYPE if llm_model_type is None else llm_model_type
+        self.embeddings_provider = settings.EMBEDDINGS_PROVIDER if embeddings_provider is None else embeddings_provider
+        self.embeddings_model = settings.EMBEDDINGS_MODEL if embeddings_model is None else embeddings_model
         self.vecdb_type = settings.VECDB_TYPE if vecdb_type is None else vecdb_type
         self.chain_name = settings.CHAIN_NAME if chain_name is None else chain_name
         self.chain_type = settings.CHAIN_TYPE if chain_type is None else chain_type
-        self.chain_verbosity = (
-            settings.CHAIN_VERBOSITY if chain_verbosity is None else chain_verbosity
-        )
+        self.chain_verbosity = settings.CHAIN_VERBOSITY if chain_verbosity is None else chain_verbosity
         self.search_type = settings.SEARCH_TYPE if search_type is None else search_type
-        self.score_threshold = (
-            settings.SCORE_THRESHOLD if score_threshold is None else score_threshold
-        )
+        self.score_threshold = settings.SCORE_THRESHOLD if score_threshold is None else score_threshold
         self.chunk_k = settings.CHUNK_K if chunk_k is None else chunk_k
-        self.local_api_url = (
-            settings.API_URL
-            if local_api_url is None and settings.API_URL is not None
-            else local_api_url
-        )
+        self.local_api_url = settings.API_URL if local_api_url is None and settings.API_URL is not None else local_api_url
         self.chat_history = []
         self.vector_store = None
-        self.azureopenai_api_version = (
-            settings.AZUREOPENAI_API_VERSION
-            if azureopenai_api_version is None
-            and settings.AZUREOPENAI_API_VERSION is not None
-            else azureopenai_api_version
-        )
-        self.embeddings = embeddings.getEmbeddings(
-            self.embeddings_provider, self.embeddings_model
-        )
+        self.azureopenai_api_version = settings.AZUREOPENAI_API_VERSION if azureopenai_api_version is None and settings.AZUREOPENAI_API_VERSION is not None else azureopenai_api_version
+        self.embeddings = embeddings.getEmbeddings(self.embeddings_provider, self.embeddings_model)
 
         # define llm
         self.chain = None
@@ -88,9 +65,7 @@ class Querier:
 
         # get chroma vector store
         if self.vecdb_type == "chromadb":
-            self.vector_store = chroma.get_chroma_vector_store(
-                self.input_folder, self.embeddings, self.vectordb_folder
-            )
+            self.vector_store = chroma.get_chroma_vector_store(self.input_folder, self.embeddings, self.vectordb_folder)
             # get retriever with some search arguments
             # maximum number of chunks to retrieve
             search_kwargs = {"k": self.chunk_k}
@@ -99,9 +74,7 @@ class Querier:
         print("Executed Querier.make_chain")
 
     def get_documents_with_scores(self, question: str) -> List[Tuple[Document, float]]:
-        most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(
-            question, k=100, filter=self.filters
-        )
+        most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(question, k=100, filter=self.filters)
         print("most_similar_docs: ", most_similar_docs)
         print(f"Topscore most similar docs: {most_similar_docs[0][1]}")
 
@@ -113,14 +86,8 @@ class Querier:
         Passage:"""
         hallucinated_answer = self.llm.invoke(hallucinated_prompt)
         print(f"Hallucinated answer: {hallucinated_answer}")
-        most_similar_docs_hallucinated = (
-            self.vector_store.similarity_search_with_relevance_scores(
-                hallucinated_answer.content, k=self.chunk_k, filter=self.filters
-            )
-        )
-        print(
-            f"Topscore most similar docs hallucinated: {most_similar_docs_hallucinated[0][1]}"
-        )
+        most_similar_docs_hallucinated = self.vector_store.similarity_search_with_relevance_scores(hallucinated_answer.content, k=self.chunk_k, filter=self.filters)
+        print(f"Topscore most similar docs hallucinated: {most_similar_docs_hallucinated[0][1]}")
 
         # Add the retrieval method of the docs to the metadata
         for document, _ in most_similar_docs:
@@ -134,10 +101,7 @@ class Querier:
         # Remove duplicates based on the score of each tuple
         unique_documents = {}
         for document, score in merged_list:
-            if (
-                document.page_content not in unique_documents
-                or unique_documents[document.page_content][1] < score
-            ):
+            if document.page_content not in unique_documents or unique_documents[document.page_content][1] < score:
                 unique_documents[document.page_content] = (document, score)
         return sorted(unique_documents.values(), key=lambda x: x[1], reverse=True)
 
@@ -176,9 +140,7 @@ class Querier:
         # If no chunk qualifies, overrule any answer generated by the LLM with message below
         _, first_score = response["source_documents"][0]
         if first_score < self.score_threshold:
-            response["answer"] = (
-                "I don't know because there is no relevant context containing the answer"
-            )
+            response["answer"] = "I don't know because there is no relevant context containing the answer"
         else:
             print(f"Topscore: {first_score}")
 

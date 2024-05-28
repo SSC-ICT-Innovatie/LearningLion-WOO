@@ -38,11 +38,7 @@ def main():
 
     # Get the aggregated text for each dossier
     # Structure: { foi_dossierId: bodytext_foi_bodyTextOCR }
-    aggregated_requests = (
-        requests.groupby("dossier_id")["bodyText"]
-        .apply(lambda texts: " ".join(map(str, texts)))
-        .to_dict()
-    )
+    aggregated_requests = requests.groupby("dossier_id")["bodyText"].apply(lambda texts: " ".join(map(str, texts))).to_dict()
 
     # Create ground truth
     # Structure: { foi_dossierId: { pages: [page1, page2, ...], documents: [document1, document2, ...] } }
@@ -66,9 +62,7 @@ def main():
             merged_structure[normalized_body_text] = {
                 "pages": aggregated_dict[dossier_id]["pages"],
                 "documents": aggregated_dict[dossier_id]["documents"],
-                "dossier": [
-                    dossier_id
-                ],  # Encapsulating dossier_id in a list as per your requirement
+                "dossier": [dossier_id],  # Encapsulating dossier_id in a list as per your requirement
             }
 
     json_file_path = os.path.join(

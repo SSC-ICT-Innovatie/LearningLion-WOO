@@ -29,52 +29,29 @@ def main():
     woo_data = pd.read_csv(file_path, compression="gzip")
 
     # Check if each dossier_id group has at least one 'verzoek' or 'besluit'
-    has_verzoek = (
-        woo_data[woo_data["type"].str.lower() == "verzoek"].groupby("dossier_id").size()
-        > 0
-    )
-    has_besluit = (
-        woo_data[woo_data["type"].str.lower() == "besluit"].groupby("dossier_id").size()
-        > 0
-    )
+    has_verzoek = woo_data[woo_data["type"].str.lower() == "verzoek"].groupby("dossier_id").size() > 0
+    has_besluit = woo_data[woo_data["type"].str.lower() == "besluit"].groupby("dossier_id").size() > 0
 
     # Check if each dossier_id group has at least one 'bijlage'
-    has_bijlage = (
-        woo_data[woo_data["type"].str.lower() == "bijlage"].groupby("dossier_id").size()
-        > 0
-    )
+    has_bijlage = woo_data[woo_data["type"].str.lower() == "bijlage"].groupby("dossier_id").size() > 0
 
     # Combine the two masks to find dossier_ids that meet both conditions
-    valid_dossier_ids_verzoek = has_verzoek[has_verzoek].index.intersection(
-        has_bijlage[has_bijlage].index
-    )
-    valid_dossier_ids_besluit = has_besluit[has_besluit].index.intersection(
-        has_bijlage[has_bijlage].index
-    )
+    valid_dossier_ids_verzoek = has_verzoek[has_verzoek].index.intersection(has_bijlage[has_bijlage].index)
+    valid_dossier_ids_besluit = has_besluit[has_besluit].index.intersection(has_bijlage[has_bijlage].index)
 
-    valid_dossier_ids = list(
-        set(valid_dossier_ids_verzoek).union(valid_dossier_ids_besluit)
-    )
+    valid_dossier_ids = list(set(valid_dossier_ids_verzoek).union(valid_dossier_ids_besluit))
 
     # Find all requests
     filtered_data = woo_data[woo_data["dossier_id"].isin(valid_dossier_ids)]
     print("[Info] ~ Length filtered df: ", len(filtered_data))
 
     # Get dataframe without the requests
-    no_requests_filtered_dataframe = filtered_data[
-        filtered_data["type"].str.lower() != "verzoek"
-    ]
-    print(
-        "[Info] ~ Length no requests filtered df: ", len(no_requests_filtered_dataframe)
-    )
+    no_requests_filtered_dataframe = filtered_data[filtered_data["type"].str.lower() != "verzoek"]
+    print("[Info] ~ Length no requests filtered df: ", len(no_requests_filtered_dataframe))
 
     # Get the aggregated text for each dossier
     # Structure: { foi_dossierId: bodytext_foi_bodyTextOCR }
-    aggregated_requests = (
-        filtered_data.groupby("dossier_id")["bodyText"]
-        .apply(lambda texts: " ".join(map(str, texts)))
-        .to_dict()
-    )
+    aggregated_requests = filtered_data.groupby("dossier_id")["bodyText"].apply(lambda texts: " ".join(map(str, texts))).to_dict()
 
     # Create ground truth
     # Structure: { foi_dossierId: { pages: [page1, page2, ...], documents: [document1, document2, ...] } }
@@ -98,15 +75,11 @@ def main():
             merged_structure[normalized_body_text] = {
                 "pages": aggregated_dict[dossier_id]["pages"],
                 "documents": aggregated_dict[dossier_id]["documents"],
-                "dossier": [
-                    dossier_id
-                ],  # Encapsulating dossier_id in a list as per your requirement
+                "dossier": [dossier_id],  # Encapsulating dossier_id in a list as per your requirement
             }
 
     # Counting all pages in the merged_structure
-    total_pages_count = sum(
-        len(details["pages"]) for details in merged_structure.values()
-    )
+    total_pages_count = sum(len(details["pages"]) for details in merged_structure.values())
 
     print(f"[Info] ~ Data for {content_folder_name}:")
     print(f"[Info] ~ Length of the data: {len(merged_structure)}")

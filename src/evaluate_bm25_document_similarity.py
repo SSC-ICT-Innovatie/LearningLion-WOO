@@ -22,9 +22,7 @@ def main():
     dataset_folder_name = args.dataset_folder_name
     results_path = args.results_path
 
-    woo_data = pd.read_csv(
-        f"./{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
-    )
+    woo_data = pd.read_csv(f"./{documents_directory}/{content_folder_name}/woo_merged.csv.gz")
 
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
@@ -66,18 +64,14 @@ def main():
         ]
     )
 
-    woo_data_subset = pd.read_csv(
-        f"./{documents_directory}/{dataset_folder_name}/woo_merged.csv.gz"
-    )
+    woo_data_subset = pd.read_csv(f"./{documents_directory}/{dataset_folder_name}/woo_merged.csv.gz")
     for _, row in woo_data_subset.iterrows():
         if pd.isna(row["bodyText"]):
             continue
         tokenized_query = evaluate_helpers.tokenize(row["bodyText"])
         doc_scores = bm25okapi.get_scores(tokenized_query)
 
-        n_pages_result = heapq.nlargest(
-            21, range(len(doc_scores)), key=doc_scores.__getitem__
-        )
+        n_pages_result = heapq.nlargest(21, range(len(doc_scores)), key=doc_scores.__getitem__)
         retrieved_page_ids = []
         retrieved_dossier_ids = []
         # scores = []
@@ -96,9 +90,7 @@ def main():
             "retrieved_page_ids": ", ".join(retrieved_page_ids),
             "retrieved_dossier_ids": ", ".join(retrieved_dossier_ids),
             "scores": "",
-            "number_of_correct_dossiers": retrieved_dossier_ids.count(
-                row["dossier_id"]
-            ),
+            "number_of_correct_dossiers": retrieved_dossier_ids.count(row["dossier_id"]),
             "dossier#1": retrieved_dossier_ids[0] == row["dossier_id"],
             "dossier#2": retrieved_dossier_ids[1] == row["dossier_id"],
             "dossier#3": retrieved_dossier_ids[2] == row["dossier_id"],
@@ -124,9 +116,7 @@ def main():
         # Append the new row to the DataFrame
         result.loc[len(result)] = new_row
 
-    result.to_csv(
-        f"{results_path}/document_similarity_{content_folder_name}_{dataset_folder_name}_bm25.csv"
-    )
+    result.to_csv(f"{results_path}/document_similarity_{content_folder_name}_{dataset_folder_name}_bm25.csv")
     print(
         f"[Info] ~ Result BM25 document similarity for {content_folder_name} saved.",
         flush=True,

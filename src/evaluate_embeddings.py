@@ -45,9 +45,7 @@ def main():
 
     # If vector store folder does not exist, stop
     if not os.path.exists(vector_db_folder):
-        print(
-            '[Error] ~ There is no vector database for this folder yet. First run "python ingest.py"'
-        )
+        print('[Error] ~ There is no vector database for this folder yet. First run "python ingest.py"')
         exit()
 
     querier = Querier()
@@ -131,9 +129,7 @@ def main():
             "retrieved_page_ids": ", ".join(retrieved_page_ids),
             "retrieved_dossier_ids": ", ".join(retrieved_dossier_ids),
             "scores": ", ".join(scores),
-            "number_of_correct_dossiers": retrieved_dossier_ids.count(
-                value["dossier"][0]
-            ),
+            "number_of_correct_dossiers": retrieved_dossier_ids.count(value["dossier"][0]),
             "dossier#1": retrieved_dossier_ids[0] == value["dossier"][0],
             "dossier#2": retrieved_dossier_ids[1] == value["dossier"][0],
             "dossier#3": retrieved_dossier_ids[2] == value["dossier"][0],

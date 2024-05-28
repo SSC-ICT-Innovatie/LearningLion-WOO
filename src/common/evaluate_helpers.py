@@ -4,9 +4,7 @@ from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 
 
-def preprocess_text(
-    text: str, index: int = 0, print_progress: bool = False, print_freq: int = 100
-) -> list[str]:
+def preprocess_text(text: str, index: int = 0, print_progress: bool = False, print_freq: int = 100) -> list[str]:
     """
     Preprocesses the input text by removing punctuation, unnecessary spaces, stop words,
     and applying stemming. Optionally, it can print progress for document processing.
