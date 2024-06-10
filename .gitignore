@@ -165,5 +165,8 @@ cython_debug/
 # documents and vector stores
 docs/
 docs_ministries/
+docs_ministries_full/
 vector_stores/
 evaluation/
+evaluation_ministries_full/
+generate_sbatch/
