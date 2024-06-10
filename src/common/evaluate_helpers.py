@@ -1,12 +1,12 @@
 import re
-from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
+from common.stopwords.stopwords import dutch_stopwords
 
 
 def preprocess_text(text: str, index: int = 0, print_progress: bool = False, print_freq: int = 100) -> list[str]:
     """
-    Preprocesses the input text by removing punctuation, unnecessary spaces, stop words,
+    Preprocesses the input text by removing punctuation, unnecessary spaces, numbers, stopwords,
     and applying stemming. Optionally, it can print progress for document processing.
 
     Parameters:
@@ -24,20 +24,21 @@ def preprocess_text(text: str, index: int = 0, print_progress: bool = False, pri
     if print_progress and index and index % print_freq == 0:
         print(f"[Info] ~ Processing document {index}", flush=True)
 
-    # Initialize stop words and stemmer
-    stop_words = set(stopwords.words("dutch"))
-    stemmer = PorterStemmer()
-
     # Remove punctuation
     text = re.sub(r"[^\w\s]", "", text)
     # Remove unnecessary whitespaces
     text = re.sub(r"\s+", " ", text).strip()
+    # Remove all numbers
+    text = re.sub(r"\d+", "", text)
 
     # Tokenize
     tokens = word_tokenize(text)
+        
+    # Initialize stop words and stemmer
+    stemmer = PorterStemmer()
 
     # Remove stop words and stem
-    return [stemmer.stem(word) for word in tokens if word not in stop_words]
+    return [stemmer.stem(word) for word in tokens if word not in dutch_stopwords]
 
 
 def tokenize(text: str) -> list[str]:
