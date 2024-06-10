@@ -11,6 +11,7 @@ import os
 import pandas as pd
 from argparse import ArgumentParser
 from common import evaluate_helpers
+from common.fastbm25 import FastBM25
 from rank_bm25 import BM25Okapi, BM25L, BM25Plus
 
 
@@ -93,13 +94,15 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
 
         # tokenized_query = evaluate_helpers.preprocess_text(key)
         tokenized_query = evaluate_helpers.tokenize(key)
-
-        doc_scores = bm25.get_scores(tokenized_query)
-
-        n_pages_result = heapq.nlargest(20, range(len(doc_scores)), key=doc_scores.__getitem__)
         retrieved_page_ids = []
         retrieved_dossier_ids = []
-        # scores = []
+        # Check if running fastbm25 or not, because FastBM25 is from a different package
+        if bm25.__class__.__name__ == "FastBM25":
+            n_pages_result = bm25.top_k_sentence_index(tokenized_query, k=20)
+        else:
+            doc_scores = bm25.get_scores(tokenized_query)
+            n_pages_result = heapq.nlargest(20, range(len(doc_scores)), key=doc_scores.__getitem__)
+            
         for i in n_pages_result:
             retrieved_page_ids.append(woo_data["page_id"][i])
             retrieved_dossier_ids.append(woo_data["dossier_id"][i])
@@ -176,7 +179,7 @@ def main():
     evaluation_file = args.evaluation_file
     retrieve_whole_document = args.retrieve_whole_document
     results_path = args.results_path
-    if args.algorithm in ["BM25Okapi", "BM25L", "BM25Plus"]:
+    if args.algorithm in ["BM25Okapi", "BM25L", "BM25Plus", "BM25Fast"]:
         algorithm = args.algorithm
     else:
         algorithm = "all"
@@ -209,7 +212,7 @@ def main():
 
     print(f"[Info] ~ Number of documents in corpus: {len(corpus)}", flush=True)
 
-    # Do preprocessing for echt document
+    # Do preprocessing for each document
     tokenized_corpus = [evaluate_helpers.preprocess_text(doc) for doc in corpus]
 
     with open(evaluation_path, "r") as file:
@@ -253,6 +256,18 @@ def main():
             results_path,
         )
         print("[Info] ~ BM25Plus done", flush=True)
+    if algorithm == "BM25Fast":
+        print("[Info] ~ Starting BM25Fast", flush=True)
+        bm25fast = FastBM25(tokenized_corpus)
+        run_bm25(
+            woo_data,
+            bm25fast,
+            evaluation,
+            evaluation_file,
+            content_folder_name,
+            results_path,
+        )
+        print("[Info] ~ BM25Fast done", flush=True)
 
 
 if __name__ == "__main__":
