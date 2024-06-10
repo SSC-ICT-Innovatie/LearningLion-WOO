@@ -77,6 +77,8 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
             "dossier#20",
         ]
     )
+    
+    print("[Info] ~ Starting with the first item")
 
     for index, (key, value) in enumerate(evaluation.items()):
         if index <= last_index:
@@ -92,8 +94,8 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
             print("[Warning] ~ No dossiers found in the JSON file", flush=True)
             continue
 
-        # tokenized_query = evaluate_helpers.preprocess_text(key)
-        tokenized_query = evaluate_helpers.tokenize(key)
+        tokenized_query = evaluate_helpers.preprocess_text(key)
+        # tokenized_query = evaluate_helpers.tokenize(key)
         retrieved_page_ids = []
         retrieved_dossier_ids = []
         # Check if running fastbm25 or not, because FastBM25 is from a different package

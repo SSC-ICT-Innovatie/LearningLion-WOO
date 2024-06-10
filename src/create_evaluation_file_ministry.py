@@ -1,10 +1,12 @@
-# This script will generate an ground truth evaluation file for the requests in the woo-dossiers.
-# It will generate a JSON file with the following structure:
-# { "bodytext": {"pages": [page1, page2, ...], "documents": [document1, document2, ...], "dossier": [dossierId] }
+"""
+This script will generate an ground truth evaluation file for the requests in the woo-dossiers.
+It will generate a JSON file with the following structure:
+{ "bodytext": {"pages": [page1, page2, ...], "documents": [document1, document2, ...], "dossier": [dossierId] }
 
-# Examples with arguments:
-# python create_evaluation_file_ministry.py --content_folder_name WoogleDumps_01-04-2024_12817_dossiers_12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
-# python create_evaluation_file_ministry.py --content_folder_name 12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
+Examples with arguments:
+python create_evaluation_file_ministry.py --content_folder_name WoogleDumps_01-04-2024_12817_dossiers_12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
+python create_evaluation_file_ministry.py --content_folder_name 12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
+"""
 
 import json
 import os
@@ -39,14 +41,14 @@ def main():
     valid_dossier_ids_verzoek = has_verzoek[has_verzoek].index.intersection(has_bijlage[has_bijlage].index)
     valid_dossier_ids_besluit = has_besluit[has_besluit].index.intersection(has_bijlage[has_bijlage].index)
 
-    valid_dossier_ids = list(set(valid_dossier_ids_verzoek).union(valid_dossier_ids_besluit))
+    valid_dossier_ids = list(valid_dossier_ids_verzoek.union(valid_dossier_ids_besluit))
 
     # Find all requests
     filtered_data = woo_data[woo_data["dossier_id"].isin(valid_dossier_ids)]
     print("[Info] ~ Length filtered df: ", len(filtered_data))
 
     # Get dataframe without the requests
-    no_requests_filtered_dataframe = filtered_data[filtered_data["type"].str.lower() != "verzoek"]
+    no_requests_filtered_dataframe = filtered_data[(filtered_data["type"].str.lower() != "verzoek") & (filtered_data["type"].str.lower() != "besluit")]
     print("[Info] ~ Length no requests filtered df: ", len(no_requests_filtered_dataframe))
 
     # Get the aggregated text for each dossier
