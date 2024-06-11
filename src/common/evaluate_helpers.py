@@ -33,7 +33,7 @@ def preprocess_text(text: str, index: int = 0, print_progress: bool = False, pri
 
     # Tokenize
     tokens = word_tokenize(text)
-        
+
     # Initialize stop words and stemmer
     stemmer = PorterStemmer()
 
