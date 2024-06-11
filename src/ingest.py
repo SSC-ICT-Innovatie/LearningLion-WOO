@@ -8,12 +8,12 @@ python ingest.py --embeddings_model meta-llama/Meta-Llama-3-8B --content_folder_
 
 import os
 import pandas as pd
+from argparse import ArgumentParser
 from common import chroma
 from common import embeddings as emb
 from common.ingestutils import IngestUtils
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
-from argparse import ArgumentParser
 
 # Local settings
 CHUNK_SIZE = 1024

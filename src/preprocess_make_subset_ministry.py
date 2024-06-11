@@ -100,7 +100,7 @@ def intersection_of_tuples(list1, list2):
 
 
 def main():
-    parser = ArgumentParser(description="Document ingestion script using the Ingester class.")
+    parser = ArgumentParser()
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
     parser.add_argument("--save_directory", type=str, required=True)
