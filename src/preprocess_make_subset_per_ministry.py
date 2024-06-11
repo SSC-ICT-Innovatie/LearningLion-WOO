@@ -49,15 +49,16 @@ def keep_relevant_columns(df):
             "source",
         ]
     ]
-    
+
+
 def keep_relevant_rows(df):
     # Explicitly create a copy of the DataFrame to avoid setting-with-copy warning
     df = df.copy()
-    
-    # Filter rows where 'bodyText' is of type str and not empty
-    return df[df['bodyText'].apply(lambda x: isinstance(x, str) and bool(x.strip()))]
 
-    
+    # Filter rows where 'bodyText' is of type str and not empty
+    return df[df["bodyText"].apply(lambda x: isinstance(x, str) and bool(x.strip()))]
+
+
 def get_first_n_dossiers_by_ministry(tuples, n, ministry, closest_nr_docs=20):
     # Filter tuples by the specified ministry and calculate the difference from 20
     filtered_and_diff = [(dossier_id, abs(num - closest_nr_docs)) for dossier_id, dossier_ministry, num in tuples if dossier_ministry.lower() == ministry.lower()]
@@ -91,6 +92,7 @@ def make_unique_tuple(tuple_list):
     # Generate the list of unique tuples with counts
     return [(id, publisher, count) for id, (publisher, count) in count_dict.items()]
 
+
 def main():
     parser = ArgumentParser()
     parser.add_argument("--content_folder_name", type=str, required=True)
@@ -108,18 +110,14 @@ def main():
     woo_data = pd.read_csv(file_path, compression="gzip")
 
     filtered_df = woo_data[woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)]
-    
+
     # Get all dossiers that are from ministries and have a request or decision file
     filtered_requests = woo_data[
-        (woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)) &
-        ((woo_data["documents_dc_type"] == "verzoek") | (woo_data["documents_dc_type"] == "besluit"))
+        (woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)) & ((woo_data["documents_dc_type"] == "verzoek") | (woo_data["documents_dc_type"] == "besluit"))
     ]
 
     # Filter for dossiers that have an attachment ("bijlage")
-    filtered_attachments = woo_data[
-        (woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)) &
-        (woo_data["documents_dc_type"] == "bijlage")
-    ]
+    filtered_attachments = woo_data[(woo_data["dossiers_dc_publisher_name"].str.contains("Ministerie", case=False)) & (woo_data["documents_dc_type"] == "bijlage")]
 
     # Get unique dossier IDs from both filters
     dossier_ids_requests = set(filtered_requests["foi_dossierId"])
@@ -132,13 +130,8 @@ def main():
     final_filtered_df = woo_data[woo_data["foi_dossierId"].isin(dossier_ids_combined)]
 
     # Create tuples of dossier IDs and publisher names from the final filtered DataFrame
-    dossier_ids_with_publishers = list(
-        zip(
-            final_filtered_df["foi_dossierId"],
-            final_filtered_df["dossiers_dc_publisher_name"]
-        )
-    )
-    
+    dossier_ids_with_publishers = list(zip(final_filtered_df["foi_dossierId"], final_filtered_df["dossiers_dc_publisher_name"]))
+
     final_dossier_tuples = make_unique_tuple(dossier_ids_with_publishers)
 
     ministries = [
@@ -165,13 +158,13 @@ def main():
 
         relevant_data = keep_relevant_columns(filtered_df_with_requests)
         relevant_data_no_requests = keep_relevant_columns(filtered_df_no_requests)
-        
+
         filtered_relevant_data = keep_relevant_rows(relevant_data)
         filtered_relevant_data_no_requests = keep_relevant_rows(relevant_data_no_requests)
-        
+
         num_dossiers = filtered_relevant_data["dossier_id"].nunique()
         num_dossiers_no_requests = filtered_relevant_data_no_requests["dossier_id"].nunique()
-        
+
         ministry_folder = f"{save_directory}/{ministry.replace(' ', '_').replace(',', '')}".lower()
         ministry_folder_no_requests = f"{save_directory}/{ministry.replace(' ', '_').replace(',', '')}_no_requests".lower()
 

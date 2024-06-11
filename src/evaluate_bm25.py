@@ -77,7 +77,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
             "dossier#20",
         ]
     )
-    
+
     print("[Info] ~ Starting with the first item", flush=True)
 
     for index, (key, value) in enumerate(evaluation.items()):
@@ -104,7 +104,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
         else:
             doc_scores = bm25.get_scores(tokenized_query)
             n_pages_result = heapq.nlargest(20, range(len(doc_scores)), key=doc_scores.__getitem__)
-            
+
         for i in n_pages_result:
             retrieved_page_ids.append(woo_data["page_id"][i])
             retrieved_dossier_ids.append(woo_data["dossier_id"][i])

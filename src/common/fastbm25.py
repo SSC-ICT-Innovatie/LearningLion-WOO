@@ -111,15 +111,7 @@ class FastBM25(object):
         for word in document_a:
             if word not in doc_freqs:
                 continue
-            score += (
-                self.idf.get(word, default_idf)
-                * doc_freqs[word]
-                * (PARAM_K1 + 1)
-                / (
-                    doc_freqs[word]
-                    + PARAM_K1 * (1 - PARAM_B + PARAM_B * len(document_b) / self.avgdl)
-                )
-            )
+            score += self.idf.get(word, default_idf) * doc_freqs[word] * (PARAM_K1 + 1) / (doc_freqs[word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * len(document_b) / self.avgdl))
         return score
 
     def get_score_by_reversed_index_all_documents(self, corpus):
@@ -133,16 +125,7 @@ class FastBM25(object):
             for word in document:
                 if word not in doc_freqs:
                     continue
-                score = (
-                    self.idf[word]
-                    * doc_freqs[word]
-                    * (PARAM_K1 + 1)
-                    / (
-                        doc_freqs[word]
-                        + PARAM_K1
-                        * (1 - PARAM_B + PARAM_B * self.doc_len[index] / self.avgdl)
-                    )
-                )
+                score = self.idf[word] * doc_freqs[word] * (PARAM_K1 + 1) / (doc_freqs[word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * self.doc_len[index] / self.avgdl))
                 if word not in document_score:
                     document_score[word] = {q_id: round(score, 2)}
                 else:
@@ -168,10 +151,7 @@ class FastBM25(object):
                 else:
                     score_overall[key] += value
         k_keys_sorted = heapq.nlargest(k, score_overall, key=score_overall.__getitem__)
-        return [
-            (self.corpus[item], item, score_overall.get(item, None))
-            for item in k_keys_sorted
-        ]
+        return [(self.corpus[item], item, score_overall.get(item, None)) for item in k_keys_sorted]
 
     def top_k_sentence_index(self, document, k=1):
         """
