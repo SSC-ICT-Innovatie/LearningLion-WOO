@@ -78,7 +78,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
         ]
     )
     
-    print("[Info] ~ Starting with the first item")
+    print("[Info] ~ Starting with the first item", flush=True)
 
     for index, (key, value) in enumerate(evaluation.items()):
         if index <= last_index:
@@ -154,7 +154,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
                 *(retrieved_dossier_ids[i] == value["dossier"][0] for i in range(20)),
             ]
         )
-        print(f"[Info] ~ Results written on index: {index}.")
+        print(f"[Info] ~ Results written on index: {index}.", flush=True)
 
 
 def main():
@@ -165,7 +165,7 @@ def main():
     print("[Info] ~ Successfully downloaded the NLTK resources.", flush=True)
 
     parser = ArgumentParser()
-    parser.add_argument("--algorithm", type=str)
+    parser.add_argument("--algorithm", type=str, required=True)
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
     parser.add_argument("--evaluation_directory", type=str, required=True)
@@ -184,15 +184,13 @@ def main():
     if args.algorithm in ["BM25Okapi", "BM25L", "BM25Plus", "BM25Fast"]:
         algorithm = args.algorithm
     else:
-        algorithm = "all"
+        raise ValueError("Algorithm must be one of: BM25Okapi, BM25L, BM25Plus, BM25Fast.")
 
     print(f"[Info] ~ Source folder of documents: {content_folder_name}", flush=True)
 
     # Selecting the paths
-    file_name = "woo_merged.csv.gz"
-    input_path = f"{documents_directory}/{content_folder_name}/{file_name}"
+    input_path = f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
     evaluation_path = f"{evaluation_directory}/{evaluation_file}"
-
     woo_data = pd.read_csv(input_path, compression="gzip")
 
     # Preprocess woo data, merge all the pages into one document, instead of seperately
@@ -222,54 +220,20 @@ def main():
 
     print(f"[Info] ~ Number of documents in evaluation: {len(evaluation)}", flush=True)
 
-    if algorithm == "BM25Okapi" or algorithm == "all":
-        print("[Info] ~ Starting BM25Okapi", flush=True)
-        bm25okapi = BM25Okapi(tokenized_corpus)
-        run_bm25(
-            woo_data,
-            bm25okapi,
-            evaluation,
-            evaluation_file,
-            content_folder_name,
-            results_path,
-        )
-        print("[Info] ~ BM25Okapi done", flush=True)
-    if algorithm == "BM25L" or algorithm == "all":
-        print("[Info] ~ Starting BM25L", flush=True)
-        bm25l = BM25L(tokenized_corpus)
-        run_bm25(
-            woo_data,
-            bm25l,
-            evaluation,
-            evaluation_file,
-            content_folder_name,
-            results_path,
-        )
-        print("[Info] ~ BM25L done", flush=True)
-    if algorithm == "BM25Plus" or algorithm == "all":
-        print("[Info] ~ Starting BM25Plus", flush=True)
-        bm25plus = BM25Plus(tokenized_corpus)
-        run_bm25(
-            woo_data,
-            bm25plus,
-            evaluation,
-            evaluation_file,
-            content_folder_name,
-            results_path,
-        )
-        print("[Info] ~ BM25Plus done", flush=True)
-    if algorithm == "BM25Fast":
-        print("[Info] ~ Starting BM25Fast", flush=True)
-        bm25fast = FastBM25(tokenized_corpus)
-        run_bm25(
-            woo_data,
-            bm25fast,
-            evaluation,
-            evaluation_file,
-            content_folder_name,
-            results_path,
-        )
-        print("[Info] ~ BM25Fast done", flush=True)
+    if algorithm == "BM25Okapi":
+        bm25 = BM25Okapi(tokenized_corpus)
+    elif algorithm == "BM25L":
+        bm25 = BM25L(tokenized_corpus)
+    elif algorithm == "BM25Plus":
+        bm25 = BM25Plus(tokenized_corpus)
+    elif algorithm == "BM25Fast":
+        bm25 = FastBM25(tokenized_corpus)
+    else:
+        raise ValueError("Algorithm must be one of: BM25Okapi, BM25L, BM25Plus, BM25Fast.")
+
+    print(f"[Info] ~ Starting {algorithm}", flush=True)
+    run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, results_path)
+    print(f"[Info] ~ {algorithm} done", flush=True)
 
 
 if __name__ == "__main__":
