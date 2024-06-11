@@ -69,7 +69,6 @@ class IngestUtils:
 
         chunk_no = 0
         for page_num, page in text:
-            print(f"[Info] ~ Now processing {metadata.get('page_id')}, with index {metadata.get('index')}.", flush=True)
             text_splitter = self.get_splitter()
             chunks = text_splitter.split_text(page)
             for i, chunk in enumerate(chunks):

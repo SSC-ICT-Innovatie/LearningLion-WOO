@@ -121,13 +121,9 @@ def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embed
                     continue
 
                 try:
-                    vector_store.add_documents(
-                        documents=documents,
-                        embedding=embeddings,
-                        collection_name=content_folder_name,
-                        persist_directory=vectordb_folder_path,
-                        ids=[str(id) for id in list(range(start_id, start_id + len(documents)))],
-                    )
+                    ids = [str(id) for id in list(range(start_id, start_id + len(documents)))]
+                    print(f"[Info] ~ Now processing {row.get('page_id')}, with id's: {', '.join(map(str,ids))}.", flush=True)
+                    vector_store.add_documents(documents=documents, embedding=embeddings, collection_name=content_folder_name, persist_directory=vectordb_folder_path, ids=ids)
                     collection = vector_store.get()
                     collection_ids = [int(id) for id in collection["ids"]]
                     start_id = max(collection_ids) + 1
