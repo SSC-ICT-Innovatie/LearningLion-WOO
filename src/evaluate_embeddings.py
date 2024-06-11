@@ -19,24 +19,6 @@ import pandas as pd
 from argparse import ArgumentParser
 from common import chroma
 from common import embeddings as emb
-from langchain_core.documents import Document
-from langchain_core.vectorstores import VectorStore
-from typing import List, Tuple, Dict, Any
-
-
-def get_documents_with_scores(vector_store: VectorStore, question: str, search_kwargs: Dict[str, Any]={"k": 100}) -> List[Tuple[Document, float]]:
-    """
-    Performs a similarity search in the vector store for documents related to the query, returning the top results.
-
-    Parameters:
-        vector_store (VectorStore): The vector store containing document vectors.
-        question (str): The query string for the search.
-        search_kwargs (Dict[str, Any]): Optional parameters for the search (default is {"k": 100}).
-
-    Returns:
-        List[Tuple[Document, float]]: List of document-score tuples for the top relevant documents.
-    """
-    return vector_store.similarity_search_with_relevance_scores(question, **search_kwargs)
 
 
 def main():
@@ -52,7 +34,7 @@ def main():
 
     evaluation_file = args.evaluation_file
     embedding_model = args.embedding_model
-    embedding_function = embedding_model.split('/')[-1]
+    embedding_function = embedding_model.split("/")[-1]
     collection_name = args.collection_name
     vector_db_folder = args.vector_db_folder
     results_path = args.results_path
@@ -131,19 +113,19 @@ def main():
 
     for index, (key, value) in enumerate(evaluation.items()):
         if index <= last_index:
-            print(f"Skipping index {index}", flush=True)
+            print(f"[Info] ~ Skipping index {index}", flush=True)
             continue
         if not value.get("pages"):
-            print("No pages found in the JSON file", flush=True)
+            print("[Warning] ~ No pages found in the JSON file", flush=True)
             continue
         if not value.get("documents"):
-            print("No documents found in the JSON file", flush=True)
+            print("[Warning] ~ No documents found in the JSON file", flush=True)
             continue
         if not value.get("dossier"):
-            print("No dossiers found in the JSON file", flush=True)
+            print("[Warning] ~ No dossiers found in the JSON file", flush=True)
             continue
 
-        documents = get_documents_with_scores(vector_store, key)
+        documents = chroma.get_documents_with_scores(vector_store, key)
 
         retrieved_page_ids = []
         retrieved_dossier_ids = []

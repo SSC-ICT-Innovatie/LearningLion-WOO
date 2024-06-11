@@ -1,6 +1,6 @@
 # Examples with arguments:
-# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --results_path ./evaluation/results --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
-# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --results_path ./evaluation/results --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
+# python evaluate_embeddings_document_similarity.py --content_folder_name minaz_no_requests --documents_directory ./docs_ministries_full --results_path ./evaluation_ministries_full/results --embedding_model GroNLP/bert-base-dutch-cased --collection_name minaz_no_requests --vector_db_folder ./vector_stores/minaz_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased
+
 
 import os
 from dotenv import load_dotenv
@@ -14,18 +14,18 @@ if platform == "linux":
     os.environ["HF_HUB_CACHE"] = "/scratch/nju"
     os.environ["TRANSFORMERS_CACHE"] = "/scratch/nju"
 
+import csv
 import pandas as pd
 from argparse import ArgumentParser
-from common.querier import Querier
+from common import chroma
+from common import embeddings as emb
 
 
 def main():
     parser = ArgumentParser()
     parser.add_argument("--content_folder_name", required=True, type=str)
     parser.add_argument("--documents_directory", required=True, type=str)
-    parser.add_argument("--embedding_provider", required=True, type=str)
-    parser.add_argument("--embedding_author", required=True, type=str)
-    parser.add_argument("--embedding_function", required=True, type=str)
+    parser.add_argument("--embedding_model", required=True, type=str)
     parser.add_argument("--collection_name", required=True, type=str)
     parser.add_argument("--vector_db_folder", required=True, type=str)
     parser.add_argument("--results_path", type=str, required=True)
@@ -34,19 +34,42 @@ def main():
 
     content_folder_name = args.content_folder_name
     documents_directory = args.documents_directory
-    embedding_provider = args.embedding_provider
-    embedding_author = args.embedding_author
-    embedding_function = args.embedding_function
-    complete_embedding_function = f"{embedding_author}/{embedding_function}"
+    embedding_model = args.embedding_model
+    embedding_function = embedding_model.split("/")[-1]
     collection_name = args.collection_name
     vector_db_folder = args.vector_db_folder
     results_path = args.results_path
 
-    querier = Querier(
-        embeddings_provider=embedding_provider,
-        embeddings_model=complete_embedding_function,
-    )
-    querier.make_chain(collection_name, vector_db_folder)
+    embeddings = emb.getEmbeddings(embedding_model)
+    vector_store = chroma.get_chroma_vector_store(collection_name, embeddings, vector_db_folder)
+
+    # Determine file paths
+    csv_file_path = os.path.join(results_path, f"document_similarity_{collection_name}_{embedding_function}.csv")
+    last_index = -1
+
+    # If the file exists, determine the last index processed
+    if os.path.exists(csv_file_path):
+        with open(csv_file_path, "r") as file:
+            reader = csv.reader(file)
+            last_index = sum(1 for row in reader)
+
+    # Open CSV file for appending or writing
+    csv_file = open(csv_file_path, "a", newline="")
+    csv_writer = csv.writer(csv_file)
+
+    # Write header if the file is new
+    if last_index == -1:
+        csv_writer.writerow(
+            [
+                "page_id",
+                "dossier_id",
+                "retrieved_page_ids",
+                "retrieved_dossier_ids",
+                "scores",
+                "number_of_correct_dossiers",
+                *(f"dossier#{i+1}" for i in range(20)),
+            ]
+        )
 
     result = pd.DataFrame(
         columns=[
@@ -80,10 +103,13 @@ def main():
     )
     # First create ground truth
     woo_data = pd.read_csv(f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz")
-    for _, row in woo_data.iterrows():
+    for index, (_, row) in enumerate(woo_data.iterrows()):
+        if index <= last_index:
+            print(f"[Info] ~ Skipping index {index}", flush=True)
+            continue
         if pd.isna(row["bodyText"]):
             continue
-        documents = querier.get_documents_with_scores(row["bodyText"])
+        documents = chroma.get_documents_with_scores(vector_store, row["bodyText"])
         retrieved_page_ids = []
         retrieved_dossier_ids = []
         scores = []
@@ -135,11 +161,18 @@ def main():
         # Append the new row to the DataFrame
         result.loc[len(result)] = new_row
 
-    result.to_csv(f"{results_path}/document_similarity_{content_folder_name}_{collection_name}_{embedding_function}.csv")
-    print(
-        f"[Info] ~ Result embeddings document similarity for {content_folder_name} with {embedding_function} saved.",
-        flush=True,
-    )
+        csv_writer.writerow(
+            [
+                "N/A",
+                row["dossier_id"],
+                ", ".join(retrieved_page_ids),
+                ", ".join(retrieved_dossier_ids),
+                "",
+                retrieved_dossier_ids.count(row["dossier_id"]),
+                *(retrieved_dossier_ids[i] == row["dossier_id"] for i in range(20)),
+            ]
+        )
+        print(f"[Info] ~ Results written on index: {index}.", flush=True)
 
 
 if __name__ == "__main__":
