@@ -4,6 +4,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
 from typing import List, Tuple, Dict, Any
 
+
 def get_chroma_vector_store(collection_name: str, embeddings: Embeddings, vectordb_folder: str) -> Chroma:
     """
     Creates and returns a Chroma vector store.
