@@ -1,5 +1,5 @@
 # Examples with arguments:
-# python evaluate_embeddings_document_similarity.py --content_folder_name minaz_no_requests --documents_directory ./docs_ministries_full --results_path ./evaluation_ministries_full/results --embedding_model GroNLP/bert-base-dutch-cased --collection_name minaz_no_requests --vector_db_folder ./vector_stores/minaz_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased
+# python evaluate_embeddings_document_similarity.py --documents_directory ./docs_ministries_full --results_path ./evaluation_ministries_full/results --embedding_model GroNLP/bert-base-dutch-cased --collection_name minaz_no_requests --vector_db_folder ./vector_stores/minaz_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased
 
 
 import os
@@ -23,7 +23,6 @@ from common import embeddings as emb
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--content_folder_name", required=True, type=str)
     parser.add_argument("--documents_directory", required=True, type=str)
     parser.add_argument("--embedding_model", required=True, type=str)
     parser.add_argument("--collection_name", required=True, type=str)
@@ -32,7 +31,6 @@ def main():
 
     args = parser.parse_args()
 
-    content_folder_name = args.content_folder_name
     documents_directory = args.documents_directory
     embedding_model = args.embedding_model
     embedding_function = embedding_model.split("/")[-1]
@@ -102,7 +100,7 @@ def main():
         ]
     )
     # First create ground truth
-    woo_data = pd.read_csv(f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz")
+    woo_data = pd.read_csv(f"{documents_directory}/{collection_name}/woo_merged.csv.gz")
     for index, (_, row) in enumerate(woo_data.iterrows()):
         if index <= last_index:
             print(f"[Info] ~ Skipping index {index}", flush=True)
