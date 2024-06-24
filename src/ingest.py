@@ -123,7 +123,7 @@ def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embed
 
                 try:
                     ids = [str(id) for id in list(range(start_id, start_id + len(documents)))]
-                    print(f"[Info] ~ Now processing {row.get('page_id')}, with id's: {', '.join(map(str,ids))}.", flush=True)
+                    print(f"[Info] ~ Now processing {row.get('page_id')}, with id's: {', '.join(map(str,ids))}, and index: {index}.", flush=True)
                     vector_store.add_documents(documents=documents, embedding=embeddings, collection_name=content_folder_name, persist_directory=vectordb_folder_path, ids=ids)
                     collection = vector_store.get()
                     collection_ids = [int(id) for id in collection["ids"]]
@@ -131,9 +131,9 @@ def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embed
                 except Exception as e:
                     print(f"[Error] ~ Error adding documents to vector store: {e}", flush=True)
                     continue
+                timer.update_time()
             # Save updated vector store to disk
             vector_store.persist()
-            timer.update_time()
         else:
             print("[Warning] ~ No new woo documents to be ingested", flush=True)
 

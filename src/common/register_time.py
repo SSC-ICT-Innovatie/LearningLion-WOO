@@ -20,6 +20,9 @@ class Timer:
         self._load_initial_time()
 
     def _load_initial_time(self):
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.start_times.append(current_time)
+        self.start_time = time.time()
         if os.path.exists(self.file_path):
             with open(self.file_path, "r") as file:
                 lines = file.readlines()
@@ -32,10 +35,10 @@ class Timer:
                         self.elapsed_time = 0.0
                         print("[Warning] ~ Time register file content is not valid. Starting fresh.", flush=True)
         else:
-            print("[Info] ~ Creating time register file.", flush=True)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.start_times.append(current_time)
-        self.start_time = time.time()
+            print(f"[Info] ~ Creating time register file at location: {self.file_path}.", flush=True)
+            start_times_str = ", ".join(self.start_times)
+            with open(self.file_path, "w") as file:
+                file.write(f"{start_times_str}\n{0}")
         print(f"[Info] ~ Starting time register with time: {current_time}", flush=True)
 
     def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity, ingest):
