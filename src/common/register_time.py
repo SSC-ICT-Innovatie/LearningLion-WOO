@@ -39,6 +39,8 @@ class Timer:
         print(f"[Info] ~ Starting time register with time: {current_time}", flush=True)
 
     def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity):
+        if "/" in algorithm:
+            algorithm = algorithm.split("/")[-1]
         if len(evaluation_file) != 0:
             evaluation_file = evaluation_file.split(".")[0]
             return f"evaluation_{content_folder_name}_{evaluation_file}_{algorithm}_time.txt"

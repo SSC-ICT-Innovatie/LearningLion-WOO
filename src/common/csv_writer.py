@@ -4,7 +4,6 @@ import os
 
 class CSVWriter:
     def __init__(self, content_folder_name, algorithm, evaluation_file="", document_similarity=False, folder_name="./evaluation/results"):
-
         self.file_name = self._generate_file_name(content_folder_name, algorithm, evaluation_file, document_similarity)
         self.file_path = os.path.join(folder_name, self.file_name)
         if not os.path.exists(folder_name):
@@ -15,6 +14,8 @@ class CSVWriter:
         self._open()
 
     def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity):
+        if "/" in algorithm:
+            algorithm = algorithm.split("/")[-1]
         if len(evaluation_file) != 0:
             evaluation_file = evaluation_file.split(".")[0]
             return f"evaluation_{content_folder_name}_{evaluation_file}_{algorithm}.csv"

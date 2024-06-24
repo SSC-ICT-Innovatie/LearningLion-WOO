@@ -81,7 +81,7 @@ def main():
     woo_data = pd.read_csv(input_path, compression="gzip")
 
     # Initializing Timer
-    timer = Timer(args.content_folder_name, args.algorithm, document_similarity="document_similarity")
+    timer = Timer(args.content_folder_name, args.algorithm, document_similarity=True, folder_name=args.results_path)
 
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
@@ -102,9 +102,7 @@ def main():
     else:
         raise ValueError("Algorithm must be one of: BM25Okapi, BM25L, BM25Plus, BM25Fast.")
 
-    print(f"[Info] ~ Starting {args.algorithm}.", flush=True)
     run_bm25_document_similarity(woo_data, bm25, args.results_path, args.content_folder_name, timer)
-    print(f"[Info] ~ {args.algorithm} done.", flush=True)
 
 
 if __name__ == "__main__":

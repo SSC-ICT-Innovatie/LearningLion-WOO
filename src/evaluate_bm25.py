@@ -109,7 +109,7 @@ def main():
         )
 
     # Initializing Timer
-    timer = Timer(args.content_folder_name, args.algorithm, evaluation_file=args.evaluation_file)
+    timer = Timer(args.content_folder_name, args.algorithm, evaluation_file=args.evaluation_file, folder_name=args.results_path)
 
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
@@ -135,9 +135,7 @@ def main():
     else:
         raise ValueError("Algorithm must be one of: BM25Okapi, BM25L, BM25Plus, BM25Fast.")
 
-    print(f"[Info] ~ Starting {args.algorithm}", flush=True)
     run_bm25(woo_data, bm25, evaluation, args.evaluation_file, args.content_folder_name, args.results_path, timer)
-    print(f"[Info] ~ {args.algorithm} done", flush=True)
 
 
 if __name__ == "__main__":
