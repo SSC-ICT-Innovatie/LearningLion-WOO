@@ -173,3 +173,23 @@ class FastBM25(object):
                     score_overall[key] += value
         k_keys_sorted = heapq.nlargest(k, score_overall, key=score_overall.__getitem__)
         return k_keys_sorted
+    
+    def top_scores(self, document):
+        """
+        document: Iterable, to be retrieved
+        Returns
+        -------
+        list
+            List of [index].
+        """
+        assert isinstance(document, Iterable), "document is not iterable"
+        score_overall = {}
+        for word in document:
+            if word not in self.document_score:
+                continue
+            for key, value in self.document_score[word].items():
+                if key not in score_overall:
+                    score_overall[key] = value
+                else:
+                    score_overall[key] += value
+        return score_overall
