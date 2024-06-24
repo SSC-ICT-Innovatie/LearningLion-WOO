@@ -10,8 +10,8 @@ from datetime import datetime
 
 
 class Timer:
-    def __init__(self, content_folder_name, algorithm, evaluation_file="", document_similarity=False, folder_name="./evaluation/results"):
-        self.file_name = self._generate_file_name(content_folder_name, algorithm, evaluation_file, document_similarity)
+    def __init__(self, content_folder_name, algorithm, evaluation_file="", document_similarity=False, ingest=False, folder_name="./evaluation/results"):
+        self.file_name = self._generate_file_name(content_folder_name, algorithm, evaluation_file, document_similarity, ingest)
         self.file_path = os.path.join(folder_name, self.file_name)
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
@@ -38,13 +38,15 @@ class Timer:
         self.start_time = time.time()
         print(f"[Info] ~ Starting time register with time: {current_time}", flush=True)
 
-    def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity):
+    def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity, ingest):
         if "/" in algorithm:
             algorithm = algorithm.split("/")[-1]
         if len(evaluation_file) != 0:
             evaluation_file = evaluation_file.split(".")[0]
             return f"evaluation_{content_folder_name}_{evaluation_file}_{algorithm}_time.txt"
         if document_similarity:
+            return f"document_similarity_{content_folder_name}_{algorithm}_time.txt"
+        if ingest:
             return f"document_similarity_{content_folder_name}_{algorithm}_time.txt"
         raise ValueError("Document similarity or evaluation not specified.")
 

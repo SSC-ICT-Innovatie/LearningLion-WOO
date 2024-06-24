@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from common import chroma
 from common import embeddings as emb
 from common.ingestutils import IngestUtils
+from common.register_time import Timer
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
 
@@ -69,7 +70,7 @@ def parse_woo(woo: pd.core.series.Series) -> Tuple[List[Tuple[int, str]], Dict[s
     return tuple_bodyText, woo_json
 
 
-def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embeddings_model):
+def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embeddings_model, timer):
     load_dotenv()
     ingestutils = IngestUtils(CHUNK_SIZE, CHUNK_OVERLAP, TEXT_SPLITTER_METHOD)
 
@@ -132,6 +133,7 @@ def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embed
                     continue
             # Save updated vector store to disk
             vector_store.persist()
+            timer.update_time()
         else:
             print("[Warning] ~ No new woo documents to be ingested", flush=True)
 
@@ -145,10 +147,10 @@ def main():
     args = parser.parse_args()
 
     content_folder_path, vectordb_folder_path = create_vectordb_name(args.content_folder_name, args.embeddings_model, args.documents_directory, args.vector_store_folder)
+    
+    timer = Timer(args.content_folder_name, args.embeddings_model, ingest=True, folder_name=args.documents_directory)
 
-    print(f"[Info] ~ Source folder of documents: {args.content_folder_name}", flush=True)
-    ingest(args.content_folder_name, content_folder_path, vectordb_folder_path, args.embeddings_model)
-    print(f"[Info] ~ Finished ingesting documents for folder {args.content_folder_name}", flush=True)
+    ingest(args.content_folder_name, content_folder_path, vectordb_folder_path, args.embeddings_model, timer)
 
 
 if __name__ == "__main__":
