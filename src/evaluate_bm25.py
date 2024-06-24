@@ -40,7 +40,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
 
         tokenized_query = evaluate_helpers.preprocess_text(key)
         # tokenized_query = evaluate_helpers.tokenize(key)
-        
+
         # Check if running FastBM25 or not, because FastBM25 uses different code
         if bm25.__class__.__name__ == "FastBM25":
             doc_scores = bm25.top_scores(tokenized_query)
@@ -48,7 +48,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
         else:
             doc_scores = bm25.get_scores(tokenized_query)
             n_pages_result = heapq.nlargest(21, range(len(doc_scores)), key=doc_scores.__getitem__)
-            
+
         retrieved_page_ids = []
         retrieved_dossier_ids = []
         scores = []
@@ -71,6 +71,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
         )
         timer.update_time()
         print(f"[Info] ~ Results written on index: {index}.", flush=True)
+    csv_writer.close()
 
 
 def main():
@@ -106,7 +107,7 @@ def main():
             )
             .reset_index()
         )
-        
+
     # Initializing Timer
     timer = Timer(args.content_folder_name, args.algorithm, evaluation_file=args.evaluation_file)
 
@@ -137,6 +138,7 @@ def main():
     print(f"[Info] ~ Starting {args.algorithm}", flush=True)
     run_bm25(woo_data, bm25, evaluation, args.evaluation_file, args.content_folder_name, args.results_path, timer)
     print(f"[Info] ~ {args.algorithm} done", flush=True)
+
 
 if __name__ == "__main__":
     main()

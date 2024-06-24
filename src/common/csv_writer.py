@@ -1,6 +1,7 @@
 import csv
 import os
 
+
 class CSVWriter:
     def __init__(self, content_folder_name, algorithm, evaluation_file="", document_similarity=False, folder_name="./evaluation/results"):
 
@@ -15,7 +16,7 @@ class CSVWriter:
 
     def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity):
         if len(evaluation_file) != 0:
-            evaluation_file = evaluation_file.split('.')[0]
+            evaluation_file = evaluation_file.split(".")[0]
             return f"evaluation_{content_folder_name}_{evaluation_file}_{algorithm}.csv"
         if document_similarity:
             return f"document_similarity_{content_folder_name}_{algorithm}.csv"
@@ -38,15 +39,17 @@ class CSVWriter:
 
     def write_header(self):
         """Write the CSV header."""
-        self.csv_writer.writerow([
-            "page_id",
-            "dossier_id",
-            "retrieved_page_ids",
-            "retrieved_dossier_ids",
-            "scores",
-            "number_of_correct_dossiers",
-            *(f"dossier#{i+1}" for i in range(20)),
-        ])
+        self.csv_writer.writerow(
+            [
+                "page_id",
+                "dossier_id",
+                "retrieved_page_ids",
+                "retrieved_dossier_ids",
+                "scores",
+                "number_of_correct_dossiers",
+                *(f"dossier#{i+1}" for i in range(20)),
+            ]
+        )
 
     def write_row(self, row_data):
         """Write a row to the CSV file."""

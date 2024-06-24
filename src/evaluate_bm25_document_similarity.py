@@ -25,7 +25,7 @@ def run_bm25_document_similarity(woo_data, bm25, results_path, content_folder_na
     for index, row in woo_data.iloc[start_index:].iterrows():
         if pd.isna(row["bodyText"]):
             continue
-        
+
         tokenized_query = evaluate_helpers.preprocess_text(row["bodyText"])
         # tokenized_query = evaluate_helpers.tokenize(row["bodyText"])
 
@@ -36,7 +36,7 @@ def run_bm25_document_similarity(woo_data, bm25, results_path, content_folder_na
         else:
             doc_scores = bm25.get_scores(tokenized_query)
             n_pages_result = heapq.nlargest(21, range(len(doc_scores)), key=doc_scores.__getitem__)
-            
+
         retrieved_page_ids = []
         retrieved_dossier_ids = []
         scores = []
@@ -65,7 +65,6 @@ def run_bm25_document_similarity(woo_data, bm25, results_path, content_folder_na
         )
         timer.update_time()
         print(f"[Info] ~ Results written on index: {index}.", flush=True)
-
     csv_writer.close()
 
 
@@ -80,7 +79,7 @@ def main():
     # Selecting the paths
     input_path = f"{args.documents_directory}/{args.content_folder_name}/woo_merged.csv.gz"
     woo_data = pd.read_csv(input_path, compression="gzip")
-    
+
     # Initializing Timer
     timer = Timer(args.content_folder_name, args.algorithm, document_similarity="document_similarity")
 

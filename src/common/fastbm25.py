@@ -173,7 +173,7 @@ class FastBM25(object):
                     score_overall[key] += value
         k_keys_sorted = heapq.nlargest(k, score_overall, key=score_overall.__getitem__)
         return k_keys_sorted
-    
+
     def top_scores(self, document):
         """
         document: Iterable, to be retrieved

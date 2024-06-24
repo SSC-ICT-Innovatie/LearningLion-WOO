@@ -37,10 +37,10 @@ class Timer:
         self.start_times.append(current_time)
         self.start_time = time.time()
         print(f"[Info] ~ Starting time register with time: {current_time}", flush=True)
-        
+
     def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity):
         if len(evaluation_file) != 0:
-            evaluation_file = evaluation_file.split('.')[0]
+            evaluation_file = evaluation_file.split(".")[0]
             return f"evaluation_{content_folder_name}_{evaluation_file}_{algorithm}_time.txt"
         if document_similarity:
             return f"document_similarity_{content_folder_name}_{algorithm}_time.txt"
@@ -59,4 +59,3 @@ class Timer:
                 file.write(f"{start_times_str}\n{temporary_elapsed_time}")
         else:
             raise ValueError("No start times to save.")
-        
