@@ -44,10 +44,10 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
         # Check if running FastBM25 or not, because FastBM25 uses different code
         if bm25.__class__.__name__ == "FastBM25":
             doc_scores = bm25.top_scores(tokenized_query)
-            n_pages_result = heapq.nlargest(21, doc_scores, key=doc_scores.__getitem__)
+            n_pages_result = heapq.nlargest(20, doc_scores, key=doc_scores.__getitem__)
         else:
             doc_scores = bm25.get_scores(tokenized_query)
-            n_pages_result = heapq.nlargest(21, range(len(doc_scores)), key=doc_scores.__getitem__)
+            n_pages_result = heapq.nlargest(20, range(len(doc_scores)), key=doc_scores.__getitem__)
 
         retrieved_page_ids = []
         retrieved_dossier_ids = []
