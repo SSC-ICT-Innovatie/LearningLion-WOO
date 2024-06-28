@@ -21,7 +21,6 @@ class Timer:
 
     def _load_initial_time(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.start_times.append(current_time)
         self.start_time = time.time()
         if os.path.exists(self.file_path):
             with open(self.file_path, "r") as file:
@@ -39,6 +38,7 @@ class Timer:
             start_times_str = ", ".join(self.start_times)
             with open(self.file_path, "w") as file:
                 file.write(f"{start_times_str}\n{0}")
+        self.start_times.append(current_time)
         print(f"[Info] ~ Starting time register with time: {current_time}", flush=True)
 
     def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity, ingest):
@@ -50,8 +50,8 @@ class Timer:
         if document_similarity:
             return f"document_similarity_{content_folder_name}_{algorithm}_time.txt"
         if ingest:
-            return f"document_similarity_{content_folder_name}_{algorithm}_time.txt"
-        raise ValueError("Document similarity or evaluation not specified.")
+            return f"ingest_{content_folder_name}_{algorithm}_time.txt"
+        raise ValueError("Document similarity, evaluation or ingest not specified.")
 
     def update_time(self):
         if self.start_time is not None:
