@@ -1,8 +1,9 @@
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_core.embeddings import Embeddings
+import torch
+from transformers import AutoModel, AutoTokenizer
+from langchain.embeddings import HuggingFaceEmbeddings
 
 
-def getEmbeddings(embedding_model_name: str) -> Embeddings:
+def getEmbeddings(embedding_model_name: str) -> HuggingFaceEmbeddings:
     """
     Retrieves embeddings based on the specified provider and model name.
 
@@ -10,9 +11,11 @@ def getEmbeddings(embedding_model_name: str) -> Embeddings:
         embedding_model_name (str): The name of the embeddings model.
 
     Returns:
-        Embeddings: The retrieved embeddings.
+        HuggingFaceEmbeddings: The retrieved embeddings.
     """
-    model_kwargs = {"device": "cpu"}
+    # Determine the device to use (GPU if available, else CPU)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model_kwargs = {"device": device}
     encode_kwargs = {"normalize_embeddings": False}
     embeddings = HuggingFaceEmbeddings(
         model_name=embedding_model_name,
@@ -26,5 +29,5 @@ def getEmbeddings(embedding_model_name: str) -> Embeddings:
         tokenizer = embeddings.client.tokenizer
         tokenizer.pad_token = tokenizer.eos_token
 
-    print(f"[Info] ~ Loaded local embeddings: {embedding_model_name}", flush=True)
+    print(f"[Info] ~ Loaded local embeddings: {embedding_model_name} on {device}", flush=True)
     return embeddings
