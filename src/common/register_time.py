@@ -66,3 +66,10 @@ class Timer:
                 file.write(f"{start_times_str}\n{temporary_elapsed_time}")
         else:
             raise ValueError("No start times to save.")
+        
+    def get_current_duration(self):
+        if self.start_time is not None:
+            elapsed_since_start = time.time() - self.start_time
+            return self.elapsed_time + elapsed_since_start
+        else:
+            return self.elapsed_time
