@@ -163,6 +163,7 @@ cython_debug/
 *.ps1
 
 # documents and vector stores
+bm25_retriever/
 docs/
 docs_ministries/
 docs_ministries_20/
