@@ -71,6 +71,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name, r
         )
         timer.update_time()
         print(f"[Info] ~ Results written on index: {index}.", flush=True)
+    print(f"[Timer] ~ Checkpoint 5: {timer.get_current_duration()}", flush=True)
     csv_writer.close()
 
 
@@ -89,10 +90,15 @@ def main():
     parser.add_argument("--results_path", type=str, required=True)
     args = parser.parse_args()
 
+    # Initializing Timer
+    timer = Timer(args.content_folder_name, args.algorithm, evaluation_file=args.evaluation_file, folder_name=args.results_path)
+
     # Selecting the paths
     input_path = f"{args.documents_directory}/{args.content_folder_name}/woo_merged.csv.gz"
     evaluation_path = f"{args.evaluation_directory}/{args.evaluation_file}"
     woo_data = pd.read_csv(input_path, compression="gzip")
+    
+    print(f"[Timer] ~ Checkpoint 1: {timer.get_current_duration()}", flush=True)
 
     # Preprocess woo data, merge all the pages into one document, instead of seperately
     if args.retrieve_whole_document:
@@ -108,11 +114,10 @@ def main():
             .reset_index()
         )
 
-    # Initializing Timer
-    timer = Timer(args.content_folder_name, args.algorithm, evaluation_file=args.evaluation_file, folder_name=args.results_path)
 
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
+    print(f"[Timer] ~ Checkpoint 2: {timer.get_current_duration()}", flush=True)
     print(f"[Info] ~ Number of documents in corpus: {len(corpus)}", flush=True)
 
     # Do preprocessing for each document
@@ -122,6 +127,8 @@ def main():
     with open(evaluation_path, "r") as file:
         evaluation = json.load(file)
     print(f"[Info] ~ Number of documents in evaluation: {len(evaluation)}", flush=True)
+
+    print(f"[Timer] ~ Checkpoint 3: {timer.get_current_duration()}", flush=True)
 
     # Choose the appropriate algorithm
     if args.algorithm == "BM25Okapi":

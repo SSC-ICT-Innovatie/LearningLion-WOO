@@ -33,7 +33,8 @@ def run_embeddings(vector_store, evaluation, evaluation_file, collection_name, r
     start_index = csv_writer.last_index + 1
     if start_index > 0:
         print(f"[Info] ~ Skipping until index {start_index - 1}.", flush=True)
-
+        
+    print(f"[Timer] ~ Checkpoint 4: {timer.get_current_duration()}", flush=True)
     for index, (key, value) in enumerate(islice(evaluation.items(), start_index, None)):
         if not value.get("pages"):
             print("[Warning] ~ No pages found in the JSON file", flush=True)
@@ -78,6 +79,7 @@ def run_embeddings(vector_store, evaluation, evaluation_file, collection_name, r
         )
         timer.update_time()
         print(f"[Info] ~ Results written on index: {index}.", flush=True)
+    print(f"[Timer] ~ Checkpoint 5: {timer.get_current_duration()}", flush=True)
     csv_writer.close()
 
 
@@ -104,8 +106,11 @@ def main():
     timer = Timer(args.collection_name, args.embedding_model, evaluation_file=args.evaluation_file, folder_name=args.results_path)
 
     # Load embeddings and corresponding vector store
+    print(f"[Timer] ~ Checkpoint 1: {timer.get_current_duration()}", flush=True)
     embeddings = emb.getEmbeddings(args.embedding_model)
+    print(f"[Timer] ~ Checkpoint 2: {timer.get_current_duration()}", flush=True)
     vector_store = chroma.get_chroma_vector_store(args.collection_name, embeddings, args.vector_db_folder)
+    print(f"[Timer] ~ Checkpoint 3: {timer.get_current_duration()}", flush=True)
 
     run_embeddings(vector_store, evaluation, args.evaluation_file, args.collection_name, args.results_path, args.embedding_model, timer)
 
