@@ -3,6 +3,22 @@ from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 from common.stopwords.stopwords import dutch_stopwords
 
+def preprocess_text_no_stem(text):
+    if type(text) != str:
+        return ""
+    
+    # Remove punctuation
+    text = re.sub(r"[^\w\s]", "", text)
+    # Remove underscores
+    text = text.replace("_", "")
+    # Remove non-ASCII characters
+    text = re.sub(r"[^\x00-\x7F]+", "", text)
+    # Remove unnecessary whitespaces
+    text = re.sub(r"\s+", " ", text).strip()
+    # Remove all numbers
+    text = re.sub(r"\d+", "", text)
+
+    return text
 
 def preprocess_text(text: str, index: int = 0, print_progress: bool = False, print_freq: int = 100) -> list[str]:
     """
