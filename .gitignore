@@ -164,15 +164,7 @@ cython_debug/
 
 # documents and vector stores
 bm25_retriever/
-docs/
-docs_ministries/
-docs_ministries_20/
-docs_ministries_full/
-vector_stores/
-vector_stores_20/
-vector_stores_old/
-evaluation/
-evaluation_manual/
-evaluation_ministries_20/
-evaluation_ministries_full/
+docs*/
+vector_stores*/
+evaluation*/
 generate_sbatch/
