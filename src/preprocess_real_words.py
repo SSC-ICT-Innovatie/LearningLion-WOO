@@ -1,7 +1,7 @@
 
 """
 Example with arguments:
-python preprocess_real_words.py --content_folder_name 12_dossiers_no_requests --documents_directory docs
+python preprocess_real_words.py --content_folder_name minbzk --documents_directory docs_ministries
 """
 
 import os
