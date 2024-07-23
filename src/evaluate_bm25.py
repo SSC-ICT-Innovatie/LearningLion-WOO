@@ -32,7 +32,7 @@ def main():
 
     # Initialize CSV Writer and Timer
     csv_writer = CSVWriter(args.content_folder_name, args.algorithm, evaluation_file=args.evaluation_file, folder_name=args.results_path)
-    timer = Timer(args.content_folder_name, args.algorithm, ingest=True, folder_name=args.bm25_retriever_folder)
+    timer = Timer(args.content_folder_name, args.algorithm, folder_name=args.results_path)
 
     folder_name = bm_25_helpers.generate_name(args.algorithm, args.content_folder_name)
     save_directory = os.path.join(args.bm25_retriever_folder, folder_name)

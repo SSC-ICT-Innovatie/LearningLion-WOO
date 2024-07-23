@@ -9,10 +9,8 @@ import pandas as pd
 import os
 from argparse import ArgumentParser
 from common import evaluate_helpers, bm_25_helpers
-from common.fastbm25 import FastBM25
 from common.register_time import Timer
 from common.stopwords.stopwords import dutch_stopwords
-from rank_bm25 import BM25Okapi, BM25L, BM25Plus
 
 def main():
     # If necessary, download the NLTK resources
@@ -20,11 +18,10 @@ def main():
     nltk.download("stopwords", quiet=True)
 
     parser = ArgumentParser()
-    parser.add_argument("--algorithm", type=str, choices=["BM25Okapi", "BM25L", "BM25Plus", "BM25Fast"], required=True)
+    parser.add_argument("--algorithm", type=str, choices=["BM25S"], required=True)
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
     parser.add_argument("--bm25_retriever_folder", type=str, required=True)
-    parser.add_argument("--retrieve_whole_document", type=bool, default=False)
     args = parser.parse_args()
 
     # Initializing Timer
@@ -33,20 +30,6 @@ def main():
     # Selecting the paths
     input_path = os.path.join(args.documents_directory, args.content_folder_name, "woo_merged.csv.gz")
     woo_data = pd.read_csv(input_path, compression="gzip")
-
-    # Preprocess woo data, merge all the pages into one document, instead of seperately
-    if args.retrieve_whole_document:
-        woo_data = (
-            woo_data.groupby("document_id")
-            .agg(
-                {
-                    "bodyText": lambda x: " ".join(x.astype(str)),
-                    "page_id": "first",
-                    "dossier_id": "first",
-                }
-            )
-            .reset_index()
-        )
 
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
