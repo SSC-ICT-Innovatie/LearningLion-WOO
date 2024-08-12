@@ -1,4 +1,8 @@
 """
+This script reads in a dataset, and calculates the percentage of real words based on this list:
+https://github.com/OpenTaal/opentaal-wordlist/blob/master/elements/wordlist-ascii.txt
+And then saves the number as a float (0-1) in a new column called real_words_percentage.
+
 Example with arguments:
 python preprocess_calc_real_words_percentage.py --content_folder_name minbzk --documents_directory docs_ministries
 """

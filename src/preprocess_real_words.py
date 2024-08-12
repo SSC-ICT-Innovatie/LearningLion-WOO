@@ -1,5 +1,9 @@
 
 """
+This script reads in a dataset, extracts only the real words based on this list:
+https://github.com/OpenTaal/opentaal-wordlist/blob/master/elements/wordlist-ascii.txt
+And then saves it in the same format.
+
 Example with arguments:
 python preprocess_real_words.py --content_folder_name minbzk --documents_directory docs_ministries
 """
