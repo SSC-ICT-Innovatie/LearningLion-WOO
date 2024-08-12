@@ -1,6 +1,9 @@
 """
+Ingests with BM25S.
+
 Example with arguments:
-python evaluate_bm25.py --algorithm BM25Okapi --content_folder_name WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords --documents_directory ../docs --evaluation_directory ./evaluation --evaluation_file evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json --results_path ./evaluation/results
+python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests --documents_directory docs_minbzk
+python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk
 """
 
 import bm25s
@@ -19,9 +22,9 @@ def main():
 
     parser = ArgumentParser()
     parser.add_argument("--algorithm", type=str, choices=["BM25S"], required=True)
+    parser.add_argument("--bm25_retriever_folder", type=str, required=True)
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
-    parser.add_argument("--bm25_retriever_folder", type=str, required=True)
     args = parser.parse_args()
 
     # Initializing Timer

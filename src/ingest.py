@@ -2,8 +2,10 @@
 Creates a vector store given a WOO dataset and embeddings model.
 
 Example with arguments:
-python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minaz_no_requests --documents_directory ./docs_ministries_full --vector_store_folder ./vector_stores
-python ingest.py --embeddings_model meta-llama/Meta-Llama-3-8B --content_folder_name minaz_no_requests --documents_directory ./docs --vector_store_folder ./vector_stores
+python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests --documents_directory docs_minbzk --vector_store_folder ./vector_stores_minbzk
+python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk --vector_store_folder ./vector_stores_minbzk
+python ingest.py --embeddings_model meta-llama/Meta-Llama-3-8B --content_folder_name minbzk_no_requests --documents_directory docs_minbzk --vector_store_folder ./vector_stores
+python ingest.py --embeddings_model meta-llama/Meta-Llama-3-8B --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk --vector_store_folder ./vector_stores
 """
 
 import os
@@ -140,9 +142,9 @@ def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embed
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--embeddings_model", type=str, required=True)
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
+    parser.add_argument("--embeddings_model", type=str, required=True)
     parser.add_argument("--vector_store_folder", type=str, required=True)
     args = parser.parse_args()
 
