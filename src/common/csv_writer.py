@@ -47,8 +47,11 @@ class CSVWriter:
                 "retrieved_page_ids",
                 "retrieved_dossier_ids",
                 "scores",
+                "precision",
+                "recall",
+                "map",
                 "number_of_correct_dossiers",
-                *(f"dossier#{i+1}" for i in range(20)),
+                *(f"dossier#{i+1}" for i in range(50)),
             ]
         )
 
