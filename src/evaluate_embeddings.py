@@ -1,7 +1,9 @@
 """
 Example with arguments:
-python evaluate_embeddings.py --results_path ./evaluation/results --evaluation_directory ./evaluation --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_model GroNLP/bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased
-python evaluate_embeddings.py --results_path ./evaluation_ministries_full/results --evaluation_directory ./evaluation_ministries_full --evaluation_file evaluation_request_minaz.json --embedding_model GroNLP/bert-base-dutch-cased --collection_name minaz_no_requests --vector_db_folder ./vector_stores/minaz_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased
+python evaluate_embeddings.py --evaluation_file minbzk.json --embedding_model GroNLP/bert-base-dutch-cased --collection_name minbzk_no_requests --vector_db_folder vector_stores_minbzk/minbzk_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased --results_path evaluation_minbzk/results --evaluation_directory ./evaluation_minbzk
+python evaluate_embeddings.py --evaluation_file minbzk_keywords.json --embedding_model GroNLP/bert-base-dutch-cased --collection_name minbzk_no_requests --vector_db_folder vector_stores_minbzk/minbzk_no_requests_chromadb_1024_256_GroNLP/bert-base-dutch-cased --results_path evaluation_minbzk/results --evaluation_directory ./evaluation_minbzk
+python evaluate_embeddings.py --evaluation_file minbzk.json --embedding_model GroNLP/bert-base-dutch-cased --collection_name minbzk_no_requests_real_words --vector_db_folder vector_stores_minbzk/minbzk_no_requests_real_words_chromadb_1024_256_GroNLP/bert-base-dutch-cased --results_path evaluation_minbzk/results --evaluation_directory ./evaluation_minbzk
+python evaluate_embeddings.py --evaluation_file minbzk_keywords.json --embedding_model GroNLP/bert-base-dutch-cased --collection_name minbzk_no_requests_real_words --vector_db_folder vector_stores_minbzk/minbzk_no_requests_real_words_chromadb_1024_256_GroNLP/bert-base-dutch-cased --results_path evaluation_minbzk/results --evaluation_directory ./evaluation_minbzk
 """
 
 import os
