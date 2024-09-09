@@ -2,10 +2,12 @@
 Creates a vector store given a WOO dataset and embeddings model.
 
 Example with arguments:
-python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests --documents_directory docs_minbzk --vector_store_folder ./vector_stores_minbzk
-python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk --vector_store_folder ./vector_stores_minbzk
-python ingest.py --embeddings_model meta-llama/Meta-Llama-3-8B --content_folder_name minbzk_no_requests --documents_directory docs_minbzk --vector_store_folder ./vector_stores
-python ingest.py --embeddings_model meta-llama/Meta-Llama-3-8B --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk --vector_store_folder ./vector_stores
+python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
 """
 
 import os
@@ -112,13 +114,14 @@ def ingest(content_folder_name, content_folder_path, vectordb_folder_path, embed
             print(f"[Info] ~ Files are added, so vector store for {content_folder_name} needs to be updated", flush=True)
             for index, row in woo_data.reset_index().iterrows():
                 # Extract raw text pages and metadata
+                print(row)
                 raw_pages, metadata = parse_woo(row)
                 if raw_pages is None or metadata is None:
                     continue
-
+                # print(raw_pages)
                 # Convert the raw text to cleaned text chunks
                 documents = ingestutils.clean_text_to_docs(raw_pages, metadata)
-
+                print(documents)
                 # If there are no documents, continue to the next iteration
                 if len(documents) == 0:
                     continue
