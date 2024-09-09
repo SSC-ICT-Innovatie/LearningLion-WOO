@@ -10,8 +10,8 @@ from datetime import datetime
 
 
 class Timer:
-    def __init__(self, content_folder_name, algorithm, evaluation_file="", document_similarity=False, ingest=False, folder_name="./evaluation/results"):
-        self.file_name = self._generate_file_name(content_folder_name, algorithm, evaluation_file, document_similarity, ingest)
+    def __init__(self, content_folder_name, algorithm, evaluation_file="", document_similarity=False, ingest=False, preprocess=False, folder_name="./evaluation/results"):
+        self.file_name = self._generate_file_name(content_folder_name, algorithm, evaluation_file, document_similarity, ingest, preprocess)
         self.file_path = os.path.join(folder_name, self.file_name)
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
@@ -41,7 +41,7 @@ class Timer:
         self.start_times.append(current_time)
         print(f"[Info] ~ Starting time register with time: {current_time}", flush=True)
 
-    def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity, ingest):
+    def _generate_file_name(self, content_folder_name, algorithm, evaluation_file, document_similarity, ingest, preprocess):
         if "/" in algorithm:
             algorithm = algorithm.split("/")[-1]
         if len(evaluation_file) != 0:
@@ -51,7 +51,9 @@ class Timer:
             return f"document_similarity_{content_folder_name}_{algorithm}_time.txt"
         if ingest:
             return f"ingest_{content_folder_name}_{algorithm}_time.txt"
-        raise ValueError("Document similarity, evaluation or ingest not specified.")
+        if preprocess:
+            return f"preprocess_{content_folder_name}_{algorithm}_time.txt"
+        raise ValueError("Document similarity, evaluation, ingest or preprocess not specified.")
 
     def update_time(self):
         if self.start_time is not None:

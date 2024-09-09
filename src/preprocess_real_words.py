@@ -5,13 +5,15 @@ https://github.com/OpenTaal/opentaal-wordlist/blob/master/elements/wordlist-asci
 And then saves it in the same format.
 
 Example with arguments:
-python preprocess_real_words.py --content_folder_name minbzk --documents_directory docs_ministries
+python preprocess_real_words.py --content_folder_name minbzk --documents_directory final_docs_minbzk --timer_directory final_times
+python preprocess_real_words.py --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --timer_directory final_times
 """
 
 import os
 import pandas as pd
 from argparse import ArgumentParser
 from common import evaluate_helpers
+from common.register_time import Timer
 
 
 def filter_body_text(text, words_set):
@@ -25,11 +27,14 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
+    parser.add_argument("--timer_directory", type=str, required=True)
     args = parser.parse_args()
 
     # Selecting the paths
     input_path = os.path.join(args.documents_directory, args.content_folder_name, "woo_merged.csv.gz")
     woo_data = pd.read_csv(input_path, compression="gzip")
+
+    timer = Timer(args.content_folder_name, "preprocess_real_words_data", preprocess=True, folder_name=args.timer_directory)
 
     words_set = set()
     with open("./common/stopwords/wordlist-ascii.txt", 'r') as file:
@@ -42,7 +47,6 @@ def main():
     # Only keep real words
     woo_data['bodyText'] = woo_data['bodyText'].apply(lambda x: filter_body_text(str(x), words_set))
 
-
     new_file_name = args.content_folder_name + "_real_words"
     save_directory = os.path.join(args.documents_directory, new_file_name)
     if os.path.exists(save_directory):
@@ -50,6 +54,8 @@ def main():
     os.makedirs(save_directory)
     output_path = os.path.join(save_directory, "woo_merged.csv.gz")
     woo_data.to_csv(output_path, compression="gzip", index=False)
+
+    timer.update_time()
     print(f"[Info] ~ Processed data saved to {output_path}.")
 
 if __name__ == "__main__":
