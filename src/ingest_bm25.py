@@ -2,8 +2,9 @@
 Ingests with BM25S.
 
 Example with arguments:
-python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests --documents_directory docs_minbzk
-python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk
+python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk
+python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk
+python ingest_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk
 """
 
 import bm25s
