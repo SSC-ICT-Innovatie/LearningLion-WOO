@@ -87,7 +87,7 @@ def main():
     for dossier_id, body_text in aggregated_requests.items():
         normalized_body_text = " ".join(body_text.split())
         if args.real_words:
-            normalized_body_text = normalized_body_text.apply(lambda x: filter_body_text(str(x), words_set)),
+            normalized_body_text = filter_body_text(str(normalized_body_text), words_set)
         if dossier_id in aggregated_dict:
             merged_structure[normalized_body_text] = {
                 "pages": aggregated_dict[dossier_id]["pages"],
