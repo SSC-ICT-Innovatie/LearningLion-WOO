@@ -4,8 +4,8 @@ It will generate a JSON file with the following structure:
 { "bodytext": {"pages": [page1, page2, ...], "documents": [document1, document2, ...], "dossier": [dossierId] }
 
 Examples with arguments:
-python create_evaluation_file_ministry.py --content_folder_name WoogleDumps_01-04-2024_12817_dossiers_12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
-python create_evaluation_file_ministry.py --content_folder_name 12_dossiers --documents_directory ./docs --evaluation_directory ./evaluation
+python create_evaluation_file_ministry.py --content_folder_name minbzk --documents_directory ./final_docs_minbzk --evaluation_directory ./final_evaluation_minbzk
+python create_evaluation_file_ministry.py --content_folder_name minbzk --documents_directory ./final_docs_minbzk --evaluation_directory ./final_evaluation_minbzk --real_words
 """
 
 import json
@@ -14,12 +14,19 @@ import pandas as pd
 from argparse import ArgumentParser
 
 
+def filter_body_text(text, words_set):
+    # Split text into words and filter them
+    filtered_words = [word for word in text.split() if word in words_set]
+    # Join the filtered words back into a string
+    return ' '.join(filtered_words)
+
 def main():
     # Parse all the arguments and read the settings
     parser = ArgumentParser()
     parser.add_argument("--content_folder_name", type=str, required=True)
     parser.add_argument("--documents_directory", type=str, required=True)
     parser.add_argument("--evaluation_directory", type=str, required=True)
+    parser.add_argument("--real_words", action="store_true")
     args = parser.parse_args()
 
     content_folder_name = args.content_folder_name
@@ -68,16 +75,25 @@ def main():
         .to_dict()
     )
 
+    if args.real_words:
+        words_set = set()
+        with open("./common/stopwords/wordlist-ascii.txt", 'r') as file:
+            for line in file:
+                words_set.add(line.strip())
+
     # Merge bodytext and ground truth
     # Structure: { bodytext: { pages: [page1, page2, ...], documents: [document1, document2, ...], dossier: [dossierId] } }
     merged_structure = {}
     for dossier_id, body_text in aggregated_requests.items():
         normalized_body_text = " ".join(body_text.split())
         if dossier_id in aggregated_dict:
+            body_text = aggregated_dict[dossier_id]["pages"]
+            if args.real_words:
+                body_text = body_text.apply(lambda x: filter_body_text(str(x), words_set)),
             merged_structure[normalized_body_text] = {
-                "pages": aggregated_dict[dossier_id]["pages"],
+                "pages": body_text,
                 "documents": aggregated_dict[dossier_id]["documents"],
-                "dossier": [dossier_id],  # Encapsulating dossier_id in a list as per your requirement
+                "dossier": [dossier_id],
             }
 
     # Counting all pages in the merged_structure
