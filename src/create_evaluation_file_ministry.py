@@ -86,12 +86,11 @@ def main():
     merged_structure = {}
     for dossier_id, body_text in aggregated_requests.items():
         normalized_body_text = " ".join(body_text.split())
+        if args.real_words:
+            normalized_body_text = normalized_body_text.apply(lambda x: filter_body_text(str(x), words_set)),
         if dossier_id in aggregated_dict:
-            body_text = aggregated_dict[dossier_id]["pages"]
-            if args.real_words:
-                body_text = body_text.apply(lambda x: filter_body_text(str(x), words_set)),
             merged_structure[normalized_body_text] = {
-                "pages": body_text,
+                "pages": aggregated_dict[dossier_id]["pages"],
                 "documents": aggregated_dict[dossier_id]["documents"],
                 "dossier": [dossier_id],
             }
