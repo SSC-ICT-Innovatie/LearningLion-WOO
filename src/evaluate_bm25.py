@@ -1,11 +1,19 @@
 """
-Evaluates with BM25S.
+Evaluates with BM25S. Requires the BM25 to be ingested already.
 
 Example with arguments:
-python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests --documents_directory docs_minbzk --evaluation_directory evaluation_minbzk --evaluation_file minbzk.json --results_path evaluation_minbzk/results
-python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests --documents_directory docs_minbzk --evaluation_directory evaluation_minbzk --evaluation_file minbzk_keywords.json --results_path evaluation_minbzk/results
-python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk --evaluation_directory evaluation_minbzk --evaluation_file minbzk.json --results_path evaluation_minbzk/results
-python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory docs_minbzk --evaluation_directory evaluation_minbzk --evaluation_file minbzk_keywords.json --results_path evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_keywords.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_paraphrase.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_real_words.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_keywords.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_paraphrase.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_real_words.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_keywords.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_paraphrase.json --results_path final_evaluation_minbzk/results
+python evaluate_bm25.py --algorithm BM25S --bm25_retriever_folder final_bm25_retriever --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --evaluation_directory final_evaluation_minbzk --evaluation_file minbzk_real_words.json --results_path final_evaluation_minbzk/results
 """
 
 import bm25s
