@@ -23,6 +23,9 @@ def keep_relevant_columns(df):
         df["bodytext_foi_bodyText"],
     )
 
+    # Remove newline characters from the bodyText column
+    df.loc[:, "all_foi_bodyText"] = df["all_foi_bodyText"].str.replace("\n", " ", regex=False).str.replace("  ", " ", regex=False)
+
     # Define the columns to rename
     rename_dict = {
         "id": "page_id",
