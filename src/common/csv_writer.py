@@ -45,6 +45,7 @@ class CSVWriter:
                 "page_id",
                 "dossier_id",
                 "retrieved_page_ids",
+                "retrieved_document_ids",
                 "retrieved_dossier_ids",
                 "scores",
                 "precision",

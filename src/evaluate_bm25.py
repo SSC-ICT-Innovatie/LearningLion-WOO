@@ -74,22 +74,24 @@ def main():
 
         preprocessed_query = evaluate_helpers.preprocess_text_no_stem(key)
         query_tokens = bm25s.tokenize(preprocessed_query)
-        results, scores = retriever.retrieve(query_tokens, k=50)
+        results, scores = retriever.retrieve(query_tokens, k=100)
 
         retrieved_page_ids = []
+        retrieved_document_ids = []
         retrieved_dossier_ids = []
         retrieved_scores = []
 
         for result, score in zip(results[0], scores[0]):
             retrieved_page_ids.append(woo_data["page_id"][result])
+            retrieved_document_ids.append(woo_data["document_id"][result])
             retrieved_dossier_ids.append(woo_data["dossier_id"][result])
             retrieved_scores.append(str(score))
 
         correct_count = sum(
             (retrieved_dossier_ids[i] == value["dossier"][0] if i < len(retrieved_dossier_ids) else False) 
-            for i in range(50)
+            for i in range(100)
         )
-        retrieved_count = 50
+        retrieved_count = 100
         precision = correct_count / retrieved_count if retrieved_count > 0 else 0
         recall = correct_count / len(value.get("pages"))
         precision_at_k = [
@@ -103,13 +105,14 @@ def main():
                 "N/A",
                 value["dossier"][0],
                 ", ".join(retrieved_page_ids),
+                ", ".join(retrieved_document_ids),
                 ", ".join(retrieved_dossier_ids),
                 ", ".join(retrieved_scores),
                 precision,
                 recall,
                 map_score,
                 retrieved_dossier_ids.count(value["dossier"][0]),
-                *((retrieved_dossier_ids[i] == value["dossier"][0] if i < len(retrieved_dossier_ids) else False) for i in range(50)),
+                *((retrieved_dossier_ids[i] == value["dossier"][0] if i < len(retrieved_dossier_ids) else False) for i in range(100)),
             ]
         )
         timer.update_time()

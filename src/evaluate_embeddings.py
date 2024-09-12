@@ -59,6 +59,7 @@ def run_embeddings(vector_store, evaluation, evaluation_file, collection_name, r
         documents = chroma.get_documents_with_scores(vector_store, key)
 
         retrieved_page_ids = []
+        retrieved_document_ids = []
         retrieved_dossier_ids = []
         scores = []
 
@@ -66,25 +67,43 @@ def run_embeddings(vector_store, evaluation, evaluation_file, collection_name, r
             if document.metadata["page_id"] in retrieved_page_ids:
                 # print("[Info] ~ Duplicate page found, skipping.", flush=True)
                 continue
-            if len(retrieved_page_ids) == 20:
-                # print("[Info] ~ 20 documents retrieved", flush=True)
+            if len(retrieved_page_ids) == 100:
+                # print("[Info] ~ 100 documents retrieved", flush=True)
                 break
             retrieved_page_ids.append(document.metadata["page_id"])
+            retrieved_document_ids.append(document.metadata["document_id"])
             retrieved_dossier_ids.append(document.metadata["dossier_id"])
             scores.append(str(score))
 
-        if len(retrieved_page_ids) != 20:
+        if len(retrieved_page_ids) != 100:
             print(f"[Warning] ~ Only {len(retrieved_page_ids)} retrieved.")
+
+        correct_count = sum(
+            (retrieved_dossier_ids[i] == value["dossier"][0] if i < len(retrieved_dossier_ids) else False) 
+            for i in range(100)
+        )
+        retrieved_count = 100
+        precision = correct_count / retrieved_count if retrieved_count > 0 else 0
+        recall = correct_count / len(value.get("pages"))
+        precision_at_k = [
+            sum(1 for x in retrieved_dossier_ids[:i+1] if x == value["dossier"][0]) / (i+1)
+            for i in range(retrieved_count) if retrieved_dossier_ids[i] == value["dossier"][0]
+        ]
+        map_score = sum(precision_at_k) / len(precision_at_k) if precision_at_k else 0
 
         csv_writer.write_row(
             [
                 "N/A",
                 value["dossier"][0],
                 ", ".join(retrieved_page_ids),
+                ", ".join(retrieved_document_ids),
                 ", ".join(retrieved_dossier_ids),
                 ", ".join(scores),
+                precision,
+                recall,
+                map_score,
                 retrieved_dossier_ids.count(value["dossier"][0]),
-                *(retrieved_dossier_ids[i] == value["dossier"][0] for i in range(20)),
+                *(retrieved_dossier_ids[i] == value["dossier"][0] for i in range(100)),
             ]
         )
         timer.update_time()
