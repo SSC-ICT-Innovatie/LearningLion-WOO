@@ -52,7 +52,7 @@ class CSVWriter:
                 "recall",
                 "map",
                 "number_of_correct_dossiers",
-                *(f"dossier#{i+1}" for i in range(50)),
+                *(f"dossier#{i+1}" for i in range(100)),
             ]
         )
 
