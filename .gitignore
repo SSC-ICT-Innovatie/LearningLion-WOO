@@ -163,8 +163,9 @@ cython_debug/
 *.ps1
 
 # documents and vector stores
-bm25_retriever/
+bm25_retriever*/
 docs*/
 vector_stores*/
 evaluation*/
 generate_sbatch/
+final*/
