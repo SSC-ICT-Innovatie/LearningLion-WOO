@@ -37,7 +37,7 @@ def main():
             words_set.add(line.strip())
 
     # Filter text
-    woo_data['bodyText'] = woo_data['bodyText'].apply(lambda x: evaluate_helpers.preprocess_text_no_stem(str(x)))
+    # woo_data['bodyText'] = woo_data['bodyText'].apply(lambda x: evaluate_helpers.preprocess_text_no_stem(str(x)))
 
     # Calculate percentage of real words
     woo_data['real_words_percentage'] = woo_data['bodyText'].apply(lambda x: calculate_real_words_percentage(str(x), words_set))
