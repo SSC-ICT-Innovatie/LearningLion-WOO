@@ -2,12 +2,12 @@
 Creates a vector store given a WOO dataset and embeddings model.
 
 Example with arguments:
-python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
-python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
-python ingest.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
-python ingest.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
-python ingest.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
-python ingest.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest_embeddings.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest_embeddings.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest_embeddings.py --embeddings_model GroNLP/bert-base-dutch-cased --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest_embeddings.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest_embeddings.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests_real_words --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
+python ingest_embeddings.py --embeddings_model sentence-transformers/all-MiniLM-L6-v2 --content_folder_name minbzk_no_requests_stem_stopwords --documents_directory final_docs_minbzk --vector_store_folder ./final_vector_stores
 """
 
 import os
