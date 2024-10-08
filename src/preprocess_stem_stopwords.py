@@ -26,7 +26,7 @@ def main():
     timer = Timer(args.content_folder_name, "preprocess_stem_stopwords", preprocess=True, folder_name=args.timer_directory)
 
     # Filter text
-    woo_data['bodyText'] = woo_data['bodyText'].apply(lambda x: evaluate_helpers.preprocess_text(str(x)))
+    woo_data['bodyText'] = woo_data['bodyText'].apply(lambda x: " ".join(evaluate_helpers.preprocess_text(str(x))))
 
     new_file_name = args.content_folder_name + "_stem_stopwords"
     save_directory = os.path.join(args.documents_directory, new_file_name)
