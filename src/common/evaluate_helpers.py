@@ -42,8 +42,10 @@ def preprocess_text(text: str, index: int = 0, print_progress: bool = False, pri
 
     # Remove punctuation
     text = re.sub(r"[^\w\s]", "", text)
-    # Remove unnecessary whitespaces
-    text = re.sub(r"\s+", " ", text).strip()
+    # Remove unnecessary spaces (but preserve newlines)
+    # The newlines are kept in for embeddings, so that the textsplitter happens at the same time as without processing.
+    # It also does not influence any results of BM25.
+    text = re.sub(r"[^\S\r\n]+", " ", text).strip()
     # Remove all numbers
     text = re.sub(r"\d+", "", text)
 
