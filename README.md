@@ -9,7 +9,7 @@ The paper corresponding to this repository can be found in the TU Delft Reposito
 
 
 ## Flow Chart
-![Flow Chart](https://github.com/SSC-ICT-Innovatie/LearningLion-WOO/tree/main/!%20project_docs/images/LearningLion-woo-workflow.jpg)
+![Flow Chart](https://github.com/SSC-ICT-Innovatie/LearningLion-WOO/blob/main/!%20project_docs/images/LearningLion-woo-workflow.jpg)
 
 
 ## Files
